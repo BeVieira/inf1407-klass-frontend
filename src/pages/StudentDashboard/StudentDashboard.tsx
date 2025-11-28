@@ -4,6 +4,8 @@ import Footer from '../../components/Footer/Footer';
 import SearchBar from '../../components/Search/SearchBar';
 import FilterTabs from '../../components/FilterTabs/FilterTabs';
 import CourseCard from '../../components/CourseCard/CourseCard';
+import ConfirmationModal from '../../components/ConfirmationModal/ConfirmationModal';
+import { useToast } from '../../contexts/ToastContext';
 import * as S from './styled';
 
 // Mock data for courses
@@ -68,28 +70,81 @@ const StudentDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('Todos');
   const [courses, setCourses] = useState(MOCK_COURSES);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<number[]>([]);
+  const { addToast } = useToast();
 
-  const handleEnroll = (id: number) => {
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [courseToUnenroll, setCourseToUnenroll] = useState<number | null>(null);
+
+  const handleEnrollClick = (id: number) => {
+    if (enrolledCourseIds.includes(id)) {
+      setCourseToUnenroll(id);
+      setIsModalOpen(true);
+      return;
+    }
+    enroll(id);
+  };
+
+  const confirmUnenroll = () => {
+    if (courseToUnenroll) {
+      setCourses((prevCourses) =>
+        prevCourses.map((course) =>
+          course.id === courseToUnenroll ? { ...course, spots: course.spots - 1 } : course
+        )
+      );
+      setEnrolledCourseIds((prev) => prev.filter((courseId) => courseId !== courseToUnenroll));
+      addToast('Inscrição cancelada com sucesso!', 'info');
+    }
+    closeModal();
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setCourseToUnenroll(null);
+  };
+
+  const enroll = (id: number) => {
+    const courseToEnroll = courses.find((c) => c.id === id);
+    if (!courseToEnroll) return;
+
+    // Check for schedule conflicts
+    const enrolledCourses = courses.filter((c) => enrolledCourseIds.includes(c.id));
+    const hasConflict = enrolledCourses.some(
+      (enrolledCourse) => enrolledCourse.schedule === courseToEnroll.schedule
+    );
+
+    if (hasConflict) {
+      addToast(`Conflito de horário! Você já está inscrito em uma disciplina neste horário (${courseToEnroll.schedule}).`, 'error');
+      return;
+    }
+
     setCourses((prevCourses) =>
       prevCourses.map((course) =>
         course.id === id ? { ...course, spots: course.spots + 1 } : course
       )
     );
-    alert('Inscrição realizada com sucesso!');
+    setEnrolledCourseIds((prev) => [...prev, id]);
+    addToast('Inscrição realizada com sucesso!', 'success');
   };
 
-  const filteredCourses = courses.filter((course) => {
-    const matchesSearch =
-      course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.professor.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Basic tab filtering logic (can be expanded)
-    if (activeTab === 'Todos') return matchesSearch;
-    // For now, other tabs just show the same list filtered by search, 
-    // but in a real app they might sort or group differently.
-    return matchesSearch;
-  });
+  const filteredCourses = courses
+    .filter((course) => {
+      const matchesSearch =
+        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.professor.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      if (activeTab === 'Por horário') {
+        return a.schedule.localeCompare(b.schedule);
+      }
+      if (activeTab === 'Por professor') {
+        return a.professor.localeCompare(b.professor);
+      }
+      return 0; // 'Todos' keeps default order
+    });
 
   return (
     <S.Page>
@@ -119,7 +174,8 @@ const StudentDashboard: React.FC = () => {
               <CourseCard
                 key={course.id}
                 {...course}
-                onEnroll={handleEnroll}
+                isEnrolled={enrolledCourseIds.includes(course.id)}
+                onEnroll={handleEnrollClick}
               />
             ))}
           </S.Grid>
@@ -130,6 +186,17 @@ const StudentDashboard: React.FC = () => {
         )}
       </S.Main>
       <Footer />
+
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        title="Cancelar Inscrição"
+        message="Tem certeza que deseja cancelar sua inscrição nesta disciplina? Esta ação liberará sua vaga para outros alunos."
+        onConfirm={confirmUnenroll}
+        onCancel={closeModal}
+        confirmText="Sim, cancelar"
+        cancelText="Voltar"
+        variant="danger"
+      />
     </S.Page>
   );
 };
