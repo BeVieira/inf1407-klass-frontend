@@ -5,6 +5,7 @@ import SearchBar from '../../components/Search/SearchBar';
 import FilterTabs from '../../components/FilterTabs/FilterTabs';
 import CourseCard from '../../components/CourseCard/CourseCard';
 import ConfirmationModal from '../../components/ConfirmationModal/ConfirmationModal';
+import StudentSchedule from '../../components/StudentSchedule/StudentSchedule';
 import { useToast } from '../../contexts/ToastContext';
 import * as S from './styled';
 
@@ -183,6 +184,12 @@ const StudentDashboard: React.FC = () => {
           <S.EmptyState>
             <p>Nenhuma disciplina encontrada.</p>
           </S.EmptyState>
+        )}
+
+        {enrolledCourseIds.length > 0 && (
+          <div style={{ marginTop: '3rem' }}>
+            <StudentSchedule courses={courses.filter(c => enrolledCourseIds.includes(c.id))} />
+          </div>
         )}
       </S.Main>
       <Footer />
