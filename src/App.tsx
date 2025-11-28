@@ -1,13 +1,13 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage/HomePage';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage/HomePage";
+import LoginPage from "./pages/LoginPage/LoginPage";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        {/* Future routes like /login, /disciplinas/:id can be added here */}
-        <Route path="/login" element={<div style={{ padding: '2rem', textAlign: 'center' }}>Página de Login (Em breve)</div>} />
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </Router>
   );
