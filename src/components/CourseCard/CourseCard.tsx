@@ -11,6 +11,7 @@ export interface CourseCardProps {
   schedule: string;
   spots: number;
   totalSpots: number;
+  isEnrolled?: boolean;
   onEnroll: (id: number) => void;
 }
 
@@ -22,15 +23,22 @@ const CourseCard: React.FC<CourseCardProps> = ({
   schedule,
   spots,
   totalSpots,
+  isEnrolled = false,
   onEnroll,
 }) => {
   const isFull = spots >= totalSpots;
+  const canEnroll = !isFull && !isEnrolled;
 
   return (
     <S.Card>
       <div>
         <S.Header>
           <S.Code>{code}</S.Code>
+          {isEnrolled && (
+            <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600, backgroundColor: '#d1fae5', padding: '0.25rem 0.5rem', borderRadius: '0.375rem' }}>
+              Inscrito
+            </span>
+          )}
         </S.Header>
         <S.Title>{name}</S.Title>
         <S.Professor>
@@ -46,8 +54,12 @@ const CourseCard: React.FC<CourseCardProps> = ({
           <Users size={16} />
           {spots}/{totalSpots} vagas
         </S.Spots>
-        <S.EnrollButton onClick={() => onEnroll(id)} disabled={isFull}>
-          {isFull ? 'Lotado' : 'Inscrever-se'}
+        <S.EnrollButton 
+          onClick={() => onEnroll(id)} 
+          disabled={!canEnroll && !isEnrolled}
+          $isEnrolled={isEnrolled}
+        >
+          {isEnrolled ? 'Cancelar inscrição' : isFull ? 'Lotado' : 'Inscrever-se'}
         </S.EnrollButton>
       </S.Footer>
     </S.Card>

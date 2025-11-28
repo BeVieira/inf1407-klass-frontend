@@ -66,8 +66,8 @@ export const Spots = styled.div`
   gap: 0.375rem;
 `;
 
-export const EnrollButton = styled.button`
-  background-color: #2563eb;
+export const EnrollButton = styled.button<{ $isEnrolled?: boolean }>`
+  background-color: ${({ $isEnrolled }) => ($isEnrolled ? '#ef4444' : '#2563eb')};
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
@@ -78,7 +78,7 @@ export const EnrollButton = styled.button`
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: #1d4ed8;
+    background-color: ${({ $isEnrolled }) => ($isEnrolled ? '#dc2626' : '#1d4ed8')};
   }
 
   &:disabled {
