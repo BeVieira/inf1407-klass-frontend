@@ -26,15 +26,15 @@ const MOCK_PROFESSOR_COURSES = [
 // Mock data for students
 const MOCK_STUDENTS: Record<number, Student[]> = {
   1: [
-    { id: 101, name: 'João Silva', email: 'joao@ufrj.br', matricula: '2023001' },
-    { id: 102, name: 'Maria Oliveira', email: 'maria@ufrj.br', matricula: '2023002' },
-    { id: 103, name: 'Pedro Santos', email: 'pedro@ufrj.br', matricula: '2023003' },
+    { id: 101, name: 'João Silva', email: 'joao@puc-rio.com.br', matricula: '2023001' },
+    { id: 102, name: 'Maria Oliveira', email: 'maria@puc-rio.com.br', matricula: '2023002' },
+    { id: 103, name: 'Pedro Santos', email: 'pedro@puc-rio.com.br', matricula: '2023003' },
   ],
   4: [
-    { id: 104, name: 'Ana Costa', email: 'ana@ufrj.br', matricula: '2022001' },
-    { id: 105, name: 'Lucas Pereira', email: 'lucas@ufrj.br', matricula: '2022002' },
-    { id: 106, name: 'Carla Souza', email: 'carla@ufrj.br', matricula: '2022003' },
-    { id: 107, name: 'Marcos Lima', email: 'marcos@ufrj.br', matricula: '2022004' },
+    { id: 104, name: 'Ana Costa', email: 'ana@puc-rio.com.br', matricula: '2022001' },
+    { id: 105, name: 'Lucas Pereira', email: 'lucas@puc-rio.com.br', matricula: '2022002' },
+    { id: 106, name: 'Carla Souza', email: 'carla@puc-rio.com.br', matricula: '2022003' },
+    { id: 107, name: 'Marcos Lima', email: 'marcos@puc-rio.com.br', matricula: '2022004' },
   ],
 };
 
