@@ -1,16 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import * as S from "./styled";
 
 const LoginPage: React.FC = () => {
-  const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const { login, isAuthenticated, user } = useAuth();
+  const { addToast } = useToast();
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const redirect =
+        user.role === "student"
+          ? "/dashboard/estudante"
+          : user.role === "professor"
+          ? "/dashboard/professor"
+          : "/dashboard/admin";
+      navigate(redirect);
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // TODO: Integrar com backend de autenticação
-    console.log({ login, password });
+    setIsSubmitting(true);
+    try {
+      await login(username, password);
+      addToast("Login realizado com sucesso!", "success");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Falha ao autenticar.";
+      addToast(message, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -19,21 +48,19 @@ const LoginPage: React.FC = () => {
 
       <S.Main>
         <S.Card>
-          <S.Title>Entrar no sistema</S.Title>
-          <S.Subtitle>
-            Faça login para acessar suas disciplinas e turmas.
-          </S.Subtitle>
+          <S.Title>Bem-vindo de volta</S.Title>
+          <S.Subtitle>Acesse sua conta para continuar</S.Subtitle>
 
           <S.Form onSubmit={handleSubmit}>
-            <S.Label htmlFor="login">
-              Login ou e-mail
+            <S.Label htmlFor="username">
+              Usuário ou matrícula
               <S.Input
-                id="login"
-                name="login"
+                id="username"
+                name="username"
                 type="text"
-                placeholder="seu.usuario@exemplo.com"
-                value={login}
-                onChange={(event) => setLogin(event.target.value)}
+                placeholder="seu_usuario"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
                 required
               />
             </S.Label>
@@ -53,15 +80,17 @@ const LoginPage: React.FC = () => {
 
             <S.Actions>
               <div />
-              <S.ForgotPassword to="/forgot-password">
-                Esqueci minha senha
-              </S.ForgotPassword>
+              <S.ForgotPassword to="#">Esqueceu a senha?</S.ForgotPassword>
             </S.Actions>
 
-            <S.PrimaryButton type="submit">Entrar</S.PrimaryButton>
+            <S.PrimaryButton type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Entrando..." : "Entrar"}
+            </S.PrimaryButton>
           </S.Form>
 
-          <S.Divider>ou</S.Divider>
+          <S.Divider>
+            <span>ou</span>
+          </S.Divider>
 
           <S.SecondaryButton to="/register">
             Cadastrar nova conta

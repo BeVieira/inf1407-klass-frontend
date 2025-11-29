@@ -14,7 +14,7 @@ export type LoginPayload = {
 };
 
 export async function registerUser(payload: RegisterPayload) {
-  return apiRequest<User>("/api/register/", {
+  return apiRequest<User>("/api/account/users", {
     method: "POST",
     body: JSON.stringify(payload),
   });

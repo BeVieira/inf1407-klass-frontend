@@ -1,50 +1,78 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import CourseCardProfessor from '../../components/CourseCardProfessor/CourseCardProfessor';
 import StudentListModal, { type Student } from '../../components/StudentListModal/StudentListModal';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import {
+  computeVacancies,
+  fetchEnrollments,
+  fetchSections,
+  formatSchedule,
+  resolveCourseData,
+} from '../../utils/api';
 import * as S from './styled';
 
-// Mock data for professor's courses
-const MOCK_PROFESSOR_COURSES = [
-  {
-    id: 1,
-    code: 'COMP101',
-    name: 'Introdução à Programação',
-    schedule: '2ª e 4ª, 08h–10h',
-    enrolledCount: 12,
-  },
-  {
-    id: 4,
-    code: 'COMP204',
-    name: 'Estrutura de Dados',
-    schedule: '3ª e 5ª, 16h–18h',
-    enrolledCount: 20,
-  },
-];
-
-// Mock data for students
-const MOCK_STUDENTS: Record<number, Student[]> = {
-  1: [
-    { id: 101, name: 'João Silva', email: 'joao@puc-rio.com.br', matricula: '2023001' },
-    { id: 102, name: 'Maria Oliveira', email: 'maria@puc-rio.com.br', matricula: '2023002' },
-    { id: 103, name: 'Pedro Santos', email: 'pedro@puc-rio.com.br', matricula: '2023003' },
-  ],
-  4: [
-    { id: 104, name: 'Ana Costa', email: 'ana@puc-rio.com.br', matricula: '2022001' },
-    { id: 105, name: 'Lucas Pereira', email: 'lucas@puc-rio.com.br', matricula: '2022002' },
-    { id: 106, name: 'Carla Souza', email: 'carla@puc-rio.com.br', matricula: '2022003' },
-    { id: 107, name: 'Marcos Lima', email: 'marcos@puc-rio.com.br', matricula: '2022004' },
-  ],
-};
-
 const ProfessorDashboard: React.FC = () => {
+  const { accessToken, user } = useAuth();
+  const { addToast } = useToast();
+
+  const [courses, setCourses] = useState<Array<{ id: number; code: string; name: string; schedule: string; enrolledCount: number }>>([]);
+  const [studentsBySection, setStudentsBySection] = useState<Record<number, Student[]>>({});
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleViewStudents = (courseId: number) => {
-    setSelectedCourseId(courseId);
+useEffect(() => {
+    if (!accessToken || !user) return;
+
+    const loadSections = async () => {
+      try {
+        const sections = await fetchSections(accessToken);
+        const mine = sections.filter((section) => {
+          const course = resolveCourseData(section);
+          return section.owner === user.id || course.owner === user.id;
+        });
+
+        const normalized = mine.map((section) => {
+          const course = resolveCourseData(section);
+          const { occupied } = computeVacancies(section);
+          return {
+            id: section.id,
+            code: course.code || `DISC-${course.id}`,
+            name: course.name || course.title || `Curso ${course.id}`,
+            schedule: formatSchedule(section),
+            enrolledCount: occupied,
+          };
+        });
+        setCourses(normalized);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Erro ao carregar suas turmas.';
+        addToast(message, 'error');
+      }
+    };
+
+    loadSections();
+  }, [accessToken, user, addToast]);
+
+  const handleViewStudents = async (sectionId: number) => {
+    setSelectedCourseId(sectionId);
     setIsModalOpen(true);
+
+    if (!accessToken) return;
+    try {
+      const enrollments = await fetchEnrollments(accessToken, sectionId);
+      const students: Student[] = enrollments.map((enrollment) => ({
+        id: enrollment.student_detail?.id || enrollment.student || enrollment.id,
+        name: enrollment.student_detail?.username || 'Estudante inscrito',
+        email: enrollment.student_detail?.email || 'E-mail não informado',
+        matricula: enrollment.student_detail?.registration || 'Matrícula não informada',
+      }));
+      setStudentsBySection((prev) => ({ ...prev, [sectionId]: students }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao carregar alunos.';
+      addToast(message, 'error');
+    }
   };
 
   const handleCloseModal = () => {
@@ -52,8 +80,8 @@ const ProfessorDashboard: React.FC = () => {
     setSelectedCourseId(null);
   };
 
-  const selectedCourse = MOCK_PROFESSOR_COURSES.find(c => c.id === selectedCourseId);
-  const students = selectedCourseId ? MOCK_STUDENTS[selectedCourseId] || [] : [];
+const selectedCourse = courses.find((c) => c.id === selectedCourseId);
+  const students = selectedCourseId ? studentsBySection[selectedCourseId] || [] : [];
 
   return (
     <S.Page>
@@ -64,9 +92,9 @@ const ProfessorDashboard: React.FC = () => {
           <S.Subtitle>Gerencie suas turmas e acompanhe os alunos inscritos.</S.Subtitle>
         </S.Header>
 
-        {MOCK_PROFESSOR_COURSES.length > 0 ? (
+        {courses.length > 0 ? (
           <S.Grid>
-            {MOCK_PROFESSOR_COURSES.map((course) => (
+            {courses.map((course) => (
               <CourseCardProfessor
                 key={course.id}
                 {...course}
@@ -85,7 +113,7 @@ const ProfessorDashboard: React.FC = () => {
       <StudentListModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        courseName={selectedCourse?.name || ''}
+        courseName={selectedCourse?.name || 'Turma'}
         students={students}
       />
     </S.Page>

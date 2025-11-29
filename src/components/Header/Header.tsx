@@ -40,7 +40,7 @@ const Header: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '1rem' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
                 <User size={16} />
-                {user.name}
+                {user.username}
               </span>
               <button 
                 onClick={handleLogout}

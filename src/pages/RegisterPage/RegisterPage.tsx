@@ -1,19 +1,39 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
+import { registerUser } from "../../utils/api";
+import { useToast } from "../../contexts/ToastContext";
 import * as S from "./styled";
 
 const RegisterPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { addToast } = useToast();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [registration, setRegistration] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // TODO: Integrar com backend para criar conta
-    console.log({ username, email, registration, password, confirmPassword });
+    if (password !== confirmPassword) {
+      addToast("As senhas não conferem.", "error");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await registerUser({ username, email, registration, password });
+      addToast("Conta criada com sucesso! Faça login para continuar.", "success");
+      navigate("/login");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Falha ao criar conta.";
+      addToast(message, "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -100,7 +120,9 @@ const RegisterPage: React.FC = () => {
               </S.Label>
             </S.PasswordRow>
 
-            <S.PrimaryButton type="submit">Cadastrar</S.PrimaryButton>
+            <S.PrimaryButton type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Cadastrando..." : "Cadastrar"}
+            </S.PrimaryButton>
           </S.Form>
 
           <S.SwitchAction>

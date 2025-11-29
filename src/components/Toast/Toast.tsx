@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 import * as S from './styled';
 
@@ -15,20 +15,20 @@ export interface ToastProps {
 const Toast: React.FC<ToastProps> = ({ id, message, type, onClose, duration = 3000 }) => {
   const [isClosing, setIsClosing] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose(id);
+    }, 300); // Wait for animation
+  }, [id, onClose]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       handleClose();
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration]);
-
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose(id);
-    }, 300); // Wait for animation
-  };
+  }, [duration, handleClose]);
 
   const Icon = type === 'success' ? CheckCircle : type === 'error' ? AlertCircle : Info;
 

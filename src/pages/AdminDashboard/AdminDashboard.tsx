@@ -1,129 +1,108 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import SearchBar from '../../components/Search/SearchBar';
 import FilterTabs from '../../components/FilterTabs/FilterTabs';
 import AdminCourseCard from '../../components/AdminCourseCard/AdminCourseCard';
 import StudentListModal, { type Student } from '../../components/StudentListModal/StudentListModal';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import {
+  computeVacancies,
+  fetchEnrollments,
+  fetchSections,
+  formatSchedule,
+  resolveCourseData,
+} from '../../utils/api';
 import * as S from './styled';
 
-// Mock data for all courses
-const MOCK_ALL_COURSES = [
-  {
-    id: 1,
-    code: 'COMP101',
-    name: 'Introdução à Programação',
-    professor: 'Dr. Alan Turing',
-    schedule: '2ª e 4ª, 08h–10h',
-    spots: 12,
-    totalSpots: 20,
-    enrolledCount: 8,
-  },
-  {
-    id: 2,
-    code: 'MAT202',
-    name: 'Cálculo II',
-    professor: 'Dra. Ada Lovelace',
-    schedule: '3ª e 5ª, 10h–12h',
-    spots: 18,
-    totalSpots: 20,
-    enrolledCount: 2,
-  },
-  {
-    id: 3,
-    code: 'FIS303',
-    name: 'Física Clássica',
-    professor: 'Dr. Isaac Newton',
-    schedule: '2ª, 4ª e 6ª, 14h–16h',
-    spots: 5,
-    totalSpots: 30,
-    enrolledCount: 25,
-  },
-  {
-    id: 4,
-    code: 'COMP204',
-    name: 'Estrutura de Dados',
-    professor: 'Dr. Grace Hopper',
-    schedule: '3ª e 5ª, 16h–18h',
-    spots: 20,
-    totalSpots: 20,
-    enrolledCount: 0,
-  },
-  {
-    id: 5,
-    code: 'EST405',
-    name: 'Probabilidade e Estatística',
-    professor: 'Dr. Andrey Kolmogorov',
-    schedule: '6ª, 08h–12h',
-    spots: 10,
-    totalSpots: 25,
-    enrolledCount: 15,
-  },
-  {
-    id: 6,
-    code: 'COMP306',
-    name: 'Banco de Dados',
-    professor: 'Dr. Edgar Codd',
-    schedule: '2ª e 4ª, 18h–20h',
-    spots: 15,
-    totalSpots: 20,
-    enrolledCount: 5,
-  },
-];
-
-// Mock data for students (reusing some from professor dashboard + extras)
-const MOCK_STUDENTS: Record<number, Student[]> = {
-  1: [
-    { id: 101, name: 'João Silva', email: 'joao@ufrj.br', matricula: '2023001' },
-    { id: 102, name: 'Maria Oliveira', email: 'maria@ufrj.br', matricula: '2023002' },
-  ],
-  3: [
-    { id: 103, name: 'Pedro Santos', email: 'pedro@ufrj.br', matricula: '2023003' },
-  ],
-  5: [
-    { id: 104, name: 'Ana Costa', email: 'ana@ufrj.br', matricula: '2022001' },
-  ],
-};
-
 const AdminDashboard: React.FC = () => {
+  const { accessToken } = useAuth();
+  const { addToast } = useToast();
+
+  const [sectionCards, setSectionCards] = useState<Array<{ id: number; code: string; name: string; professor: string; schedule: string; spots: number; totalSpots: number; enrolledCount: number }>>([]);
+  const [studentsBySection, setStudentsBySection] = useState<Record<number, Student[]>>({});
+  const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('Todos');
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleViewDetails = (courseId: number) => {
-    setSelectedCourseId(courseId);
+useEffect(() => {
+    if (!accessToken) return;
+
+    const loadData = async () => {
+      try {
+        const allSections = await fetchSections(accessToken);
+
+        const cards = allSections.map((section) => {
+          const course = resolveCourseData(section);
+          const { occupied, totalSpots } = computeVacancies(section);
+          return {
+            id: section.id,
+            code: course.code || `DISC-${course.id}`,
+            name: course.name || course.title || `Curso ${course.id}`,
+            professor: course.professor_name || 'Professor responsável',
+            schedule: formatSchedule(section),
+            spots: occupied,
+            totalSpots: totalSpots || occupied || 0,
+            enrolledCount: occupied,
+          };
+        });
+        setSectionCards(cards);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Erro ao carregar disciplinas.';
+        addToast(message, 'error');
+      }
+    };
+
+    loadData();
+  }, [accessToken, addToast]);
+
+  const handleViewStudents = async (sectionId: number) => {
+    setSelectedSectionId(sectionId);
     setIsModalOpen(true);
+
+    if (!accessToken) return;
+    try {
+      const enrollments = await fetchEnrollments(accessToken, sectionId);
+      const students: Student[] = enrollments.map((enrollment) => ({
+        id: enrollment.student_detail?.id || enrollment.student || enrollment.id,
+        name: enrollment.student_detail?.username || 'Estudante inscrito',
+        email: enrollment.student_detail?.email || 'E-mail não informado',
+        matricula: enrollment.student_detail?.registration || 'Matrícula não informada',
+      }));
+      setStudentsBySection((prev) => ({ ...prev, [sectionId]: students }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao carregar alunos.';
+      addToast(message, 'error');
+    }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedCourseId(null);
+    setSelectedSectionId(null);
   };
 
-  const selectedCourse = MOCK_ALL_COURSES.find(c => c.id === selectedCourseId);
-  const students = selectedCourseId ? MOCK_STUDENTS[selectedCourseId] || [] : [];
+ const filteredCards = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return sectionCards
+      .filter((course) =>
+        course.name.toLowerCase().includes(term) ||
+        course.code.toLowerCase().includes(term) ||
+        course.professor.toLowerCase().includes(term)
+      )
+      .sort((a, b) => {
+        if (activeTab === 'Por horário') {
+          return a.schedule.localeCompare(b.schedule);
+        }
+        if (activeTab === 'Por professor') {
+          return a.professor.localeCompare(b.professor);
+        }
+        return 0;
+      });
+  }, [sectionCards, searchTerm, activeTab]);
 
-  const filteredCourses = MOCK_ALL_COURSES
-    .filter((course) => {
-      const matchesSearch =
-        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.professor.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch;
-    })
-    .sort((a, b) => {
-      if (activeTab === 'Por horário') {
-        return a.schedule.localeCompare(b.schedule);
-      }
-      if (activeTab === 'Por professor') {
-        return a.professor.localeCompare(b.professor);
-      }
-      if (activeTab === 'Por curso') {
-        return a.name.localeCompare(b.name);
-      }
-      return 0;
-    });
+  const students = selectedSectionId ? studentsBySection[selectedSectionId] || [] : [];
 
   return (
     <S.Page>
@@ -131,12 +110,12 @@ const AdminDashboard: React.FC = () => {
       <S.Main>
         <S.Header>
           <S.Title>Painel do Administrador</S.Title>
-          <S.Subtitle>Visão geral de todas as disciplinas e inscrições do sistema.</S.Subtitle>
+          <S.Subtitle>Visualize todas as disciplinas, turmas e matrículas.</S.Subtitle>
         </S.Header>
 
         <S.Controls>
           <FilterTabs
-            tabs={['Todos', 'Por professor', 'Por horário', 'Por curso']}
+            tabs={['Todos', 'Por horário', 'Por professor']}
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
@@ -147,13 +126,13 @@ const AdminDashboard: React.FC = () => {
           />
         </S.Controls>
 
-        {filteredCourses.length > 0 ? (
+        {filteredCards.length > 0 ? (
           <S.Grid>
-            {filteredCourses.map((course) => (
+            {filteredCards.map((course) => (
               <AdminCourseCard
                 key={course.id}
                 {...course}
-                onViewDetails={handleViewDetails}
+                onViewDetails={handleViewStudents}
               />
             ))}
           </S.Grid>
@@ -168,7 +147,7 @@ const AdminDashboard: React.FC = () => {
       <StudentListModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        courseName={selectedCourse?.name || ''}
+        courseName={sectionCards.find((c) => c.id === selectedSectionId)?.name || 'Turma'}
         students={students}
       />
     </S.Page>
