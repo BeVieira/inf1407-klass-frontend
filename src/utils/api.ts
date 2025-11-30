@@ -1,5 +1,4 @@
-const API_BASE_URL = 'klassapi.pythonanywhere.com/api';//(import.meta.env.VITE_API_BASE_URL || 'klassapi.pythonanywhere.com/api').replace(/\/$/, '');
-
+const API_BASE_URL = 'https://klassapi.pythonanywhere.com/api';//(import.meta.env.VITE_API_BASE_URL || 'https://klassapi.pythonanywhere.com/api').replace(/\/$/, '');
 type ApiRequestOptions = RequestInit & { skipAuth?: boolean };
 
 interface TokenPair {
@@ -58,6 +57,15 @@ export const registerUser = (payload: RegisterPayload) =>
     body: JSON.stringify(payload),
   });
 
+export const fetchCourses = (token: string) =>
+  apiRequest<CourseResponse[]>('/courses/courses/', { method: 'GET' }, token);
+
+export const createCourse = (token: string, payload: { code: string; name: string; description: string; owner: number }) =>
+  apiRequest<CourseResponse>('/courses/courses/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, token);
+
 export const fetchSections = (token: string) =>
   apiRequest<SectionResponse[]>('/courses/sections/', { method: 'GET' }, token);
 
@@ -95,22 +103,20 @@ export interface RegisterPayload {
 
 export interface CourseResponse {
   id: number;
-  code?: string;
-  name?: string;
-  title?: string;
-  owner?: number;
-  professor_name?: string;
+  code: string;
+  name: string;
+  description: string;
+  owner: number;
 }
 
 export interface SectionResponse {
   id: number;
-  course: CourseResponse | number;
-  schedule?: string;
-  days?: string;
-  vacancies?: number;
+  course: number;
+  days: string; //Ex.: SEG-QUA
+  schedule: string; //Ex.: 10:00-12:00
+  vacancies: number;
   capacity?: number;
   enrolled_count?: number;
-  owner?: number;
 }
 
 export interface EnrollmentResponse {
