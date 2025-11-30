@@ -67,92 +67,56 @@ const Header: React.FC = () => {
         <span>Klass</span>
       </S.Logo>
 
-      {/* Desktop Nav */}
-      <S.Nav>
-        {!isAuthenticated ? (
-          <>
-            <S.NavLink to="/">Início</S.NavLink>
-            <S.NavAnchor href="#disciplinas">Disciplinas</S.NavAnchor>
-            <S.NavAnchor href="#como-funciona">Como funciona</S.NavAnchor>
-            <S.LoginButton to="/login">Login</S.LoginButton>
-          </>
-        ) : (
-          user && (
-            <S.UserMenuContainer ref={userMenuRef}>
-              <S.UserTrigger onClick={toggleUserMenu}>
-                <S.UserAvatar>
-                  {getInitials(user.username)}
-                </S.UserAvatar>
-                <S.UserInfo>
-                  <S.UserName>{user.username}</S.UserName>
-                  <S.UserRole>{getRoleLabel(user.role)}</S.UserRole>
-                </S.UserInfo>
-                <ChevronDown size={16} color="#6b7280" />
-              </S.UserTrigger>
+      {/* Desktop Nav - Only for unauthenticated users */}
+      {!isAuthenticated && (
+        <S.Nav>
+          <S.NavLink to="/">Início</S.NavLink>
+          <S.NavAnchor href="#disciplinas">Disciplinas</S.NavAnchor>
+          <S.NavAnchor href="#como-funciona">Como funciona</S.NavAnchor>
+          <S.LoginButton to="/login">Login</S.LoginButton>
+        </S.Nav>
+      )}
 
-              <S.UserDropdown $isOpen={isUserMenuOpen}>
-                <S.DropdownItem onClick={() => { navigate('/perfil'); setIsUserMenuOpen(false); }}>
-                  <User size={16} />
-                  Meu Perfil
-                </S.DropdownItem>
-                <S.DropdownItem onClick={handleLogout} className="danger">
-                  <LogOut size={16} />
-                  Sair
-                </S.DropdownItem>
-              </S.UserDropdown>
-            </S.UserMenuContainer>
-          )
-        )}
-      </S.Nav>
+      {/* User Menu - Visible on all devices when authenticated */}
+      {isAuthenticated && user && (
+        <S.UserMenuContainer ref={userMenuRef}>
+          <S.UserTrigger onClick={toggleUserMenu}>
+            <S.UserAvatar>
+              {getInitials(user.username)}
+            </S.UserAvatar>
+            <S.UserInfo>
+              <S.UserName>{user.username}</S.UserName>
+              <S.UserRole>{getRoleLabel(user.role)}</S.UserRole>
+            </S.UserInfo>
+            <ChevronDown size={16} color="#6b7280" />
+          </S.UserTrigger>
 
-      {/* Mobile Menu Button */}
-      <S.MobileMenuButton onClick={toggleMenu}>
-        {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-      </S.MobileMenuButton>
+          <S.UserDropdown $isOpen={isUserMenuOpen}>
+            <S.DropdownItem onClick={() => { navigate('/perfil'); setIsUserMenuOpen(false); }}>
+              <User size={16} />
+              Meu Perfil
+            </S.DropdownItem>
+            <S.DropdownItem onClick={handleLogout} className="danger">
+              <LogOut size={16} />
+              Sair
+            </S.DropdownItem>
+          </S.UserDropdown>
+        </S.UserMenuContainer>
+      )}
 
-      {/* Mobile Menu */}
-      <S.MobileMenu $isOpen={isMenuOpen}>
-        {!isAuthenticated ? (
-          <>
-            <S.MobileNavLink to="/" onClick={() => setIsMenuOpen(false)}>Início</S.MobileNavLink>
-            <S.MobileNavAnchor href="#disciplinas" onClick={() => setIsMenuOpen(false)}>Disciplinas</S.MobileNavAnchor>
-            <S.MobileNavAnchor href="#como-funciona" onClick={() => setIsMenuOpen(false)}>Como funciona</S.MobileNavAnchor>
-            <S.LoginButton to="/login" onClick={() => setIsMenuOpen(false)} style={{ textAlign: 'center' }}>Login</S.LoginButton>
-          </>
-        ) : (
-          user && (
-            <div style={{ padding: '0.5rem', borderTop: '1px solid #f3f4f6', marginTop: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', padding: '0.5rem' }}>
-                <S.UserAvatar>
-                  {getInitials(user.username)}
-                </S.UserAvatar>
-                <S.UserInfo>
-                  <S.UserName>{user.username}</S.UserName>
-                  <S.UserRole>{getRoleLabel(user.role)}</S.UserRole>
-                </S.UserInfo>
-              </div>
-              <button 
-                onClick={handleLogout}
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  cursor: 'pointer', 
-                  color: '#ef4444',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  width: '100%',
-                  padding: '0.5rem',
-                  fontSize: '0.875rem',
-                  fontWeight: 500
-                }}
-              >
-                <LogOut size={16} />
-                Sair
-              </button>
-            </div>
-          )
-        )}
+      {/* Mobile Menu Button - Only for unauthenticated users */}
+      {!isAuthenticated && (
+        <S.MobileMenuButton onClick={toggleMenu}>
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </S.MobileMenuButton>
+      )}
+
+      {/* Mobile Menu - Only for unauthenticated users */}
+      <S.MobileMenu $isOpen={isMenuOpen && !isAuthenticated}>
+        <S.MobileNavLink to="/" onClick={() => setIsMenuOpen(false)}>Início</S.MobileNavLink>
+        <S.MobileNavAnchor href="#disciplinas" onClick={() => setIsMenuOpen(false)}>Disciplinas</S.MobileNavAnchor>
+        <S.MobileNavAnchor href="#como-funciona" onClick={() => setIsMenuOpen(false)}>Como funciona</S.MobileNavAnchor>
+        <S.LoginButton to="/login" onClick={() => setIsMenuOpen(false)} style={{ textAlign: 'center' }}>Login</S.LoginButton>
       </S.MobileMenu>
     </S.HeaderContainer>
   );
