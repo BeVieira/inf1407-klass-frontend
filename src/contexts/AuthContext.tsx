@@ -11,7 +11,7 @@ import {
   refreshAccessToken,
 } from "../services/userService";
 
-export type UserRole = "student" | "teacher" | "admin" | "professor";
+export type UserRole = "student" | "teacher" | "admin" ;
 
 export interface User {
   id: number;
