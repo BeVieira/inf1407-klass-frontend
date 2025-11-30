@@ -11,7 +11,7 @@ import {
   refreshAccessToken,
 } from "../services/userService";
 
-export type UserRole = "student" | "professor" | "admin";
+export type UserRole = "student" | "teacher" | "admin";
 
 export interface User {
   id: number;
@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = useCallback(
     async (username: string, password: string) => {
-      const tokens = await loginUser({ login: username, password });
+      const tokens = await loginUser({ username, password });
       
       // Pass the new access token to fetch the user profile
       const profile = await fetchCurrentUser(tokens.access); 

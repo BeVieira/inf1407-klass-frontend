@@ -20,7 +20,7 @@ const LoginPage: React.FC = () => {
       const redirect =
         user.role === "student"
           ? "/dashboard/estudante"
-          : user.role === "professor"
+          : user.role === "teacher"
           ? "/dashboard/professor"
           : "/dashboard/admin";
       navigate(redirect);

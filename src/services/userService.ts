@@ -9,7 +9,7 @@ export type RegisterPayload = {
 };
 
 export type LoginPayload = {
-  login: string;
+  username: string;
   password: string;
 };
 
@@ -26,7 +26,6 @@ export async function registerUser(payload: RegisterPayload) {
 }
 
 export async function loginUser(payload: LoginPayload) {
-  console.log( "login payload", payload);
   return apiRequest<TokenPair>("/api/auth/token/", {
     method: "POST",
     body: JSON.stringify(payload),
