@@ -49,3 +49,20 @@ export const Description = styled.p`
   -webkit-box-orient: vertical;
   overflow: hidden;
 `;
+
+export const DeleteButton = styled.button`
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #fee2e2;
+  }
+`;

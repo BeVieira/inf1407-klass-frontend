@@ -97,6 +97,12 @@ export const enrollInSection = (token: string, sectionId: number) =>
 export const deleteEnrollment = (token: string, enrollmentId: number) =>
   apiRequest<void>(`/enrollments/enrollments/${enrollmentId}/`, { method: 'DELETE' }, token);
 
+export const deleteSection = (token: string, sectionId: number) =>
+  apiRequest<void>(`/courses/sections/${sectionId}/`, { method: 'DELETE' }, token);
+
+export const deleteCourse = (token: string, courseId: number) =>
+  apiRequest<void>(`/courses/courses/${courseId}/`, { method: 'DELETE' }, token);
+
 export const changePassword = (token: string, payload: { old_password: string; new_password: string }) =>
   apiRequest<void>('/accounts/change-password/', {
     method: 'POST',

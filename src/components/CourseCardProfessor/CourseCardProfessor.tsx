@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users } from 'lucide-react';
+import { Users, Trash2 } from 'lucide-react';
 import ScheduleTag from '../ScheduleTag/ScheduleTag';
 import * as S from './styled';
 
@@ -11,6 +11,7 @@ export interface CourseCardProfessorProps {
   days: string;
   enrolledCount: number;
   onViewStudents: (id: number) => void;
+  onDelete: (id: number) => void;
 }
 
 const CourseCardProfessor: React.FC<CourseCardProfessorProps> = ({
@@ -21,12 +22,16 @@ const CourseCardProfessor: React.FC<CourseCardProfessorProps> = ({
   days,
   enrolledCount,
   onViewStudents,
+  onDelete,
 }) => {
   return (
     <S.Card>
       <div>
         <S.Header>
           <S.Code>{code}</S.Code>
+          <S.DeleteButton onClick={() => onDelete(id)} title="Deletar turma">
+            <Trash2 size={18} />
+          </S.DeleteButton>
         </S.Header>
         <S.Title>{name}</S.Title>
       </div>

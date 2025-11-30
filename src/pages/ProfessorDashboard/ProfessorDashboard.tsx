@@ -4,23 +4,24 @@ import Footer from '../../components/Footer/Footer';
 import CourseCardProfessor from '../../components/CourseCardProfessor/CourseCardProfessor';
 import CourseListCard from '../../components/CourseListCard/CourseListCard';
 import FilterTabs from '../../components/FilterTabs/FilterTabs';
-import StudentListModal, { type Student } from '../../components/StudentListModal/StudentListModal';
+import StudentListModal from '../../components/StudentListModal/StudentListModal';
 import CreateCourseModal from '../../components/CreateCourseModal/CreateCourseModal';
 import CreateSectionModal from '../../components/CreateSectionModal/CreateSectionModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import {
   computeVacancies,
-  fetchEnrollments,
   fetchSections,
   fetchCourses,
   createCourse,
   createSection,
+  deleteSection,
+  deleteCourse,
   formatSchedule,
   type CourseResponse,
   type SectionResponse,
 } from '../../utils/api';
-import * as S from './styled';
+import * as S from "./styled";
 
 interface CourseWithSections extends CourseResponse {
   sections: SectionResponse[];
@@ -32,7 +33,6 @@ const ProfessorDashboard: React.FC = () => {
 
   const [courses, setCourses] = useState<CourseWithSections[]>([]);
   const [myCourses, setMyCourses] = useState<CourseResponse[]>([]);
-  const [studentsBySection, setStudentsBySection] = useState<Record<number, Student[]>>({});
   const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -99,22 +99,46 @@ const ProfessorDashboard: React.FC = () => {
     }
   };
 
-  const handleViewStudents = async (sectionId: number) => {
+  const handleViewStudents = (sectionId: number) => {
     setSelectedSectionId(sectionId);
     setIsModalOpen(true);
+  };
 
+  const handleDeleteSection = async (sectionId: number) => {
     if (!accessToken) return;
+
+    const confirmDelete = window.confirm('Tem certeza que deseja deletar esta turma?');
+    if (!confirmDelete) return;
+
     try {
-      const enrollments = await fetchEnrollments(accessToken, sectionId);
-      const students: Student[] = enrollments.map((enrollment) => ({
-        id: enrollment.student_detail?.id || enrollment.student || enrollment.id,
-        name: enrollment.student_detail?.username || 'Estudante inscrito',
-        email: enrollment.student_detail?.email || 'E-mail não informado',
-        matricula: enrollment.student_detail?.registration || 'Matrícula não informada',
-      }));
-      setStudentsBySection((prev) => ({ ...prev, [sectionId]: students }));
+      await deleteSection(accessToken, sectionId);
+      addToast('Turma deletada com sucesso!', 'success');
+      setRefreshTrigger((prev) => prev + 1);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao carregar alunos.';
+      const message = error instanceof Error ? error.message : 'Erro ao deletar turma.';
+      addToast(message, 'error');
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: number) => {
+    if (!accessToken) return;
+
+    // Verificar se o curso tem turmas
+    const course = courses.find(c => c.id === courseId);
+    if (course && course.sections.length > 0) {
+      addToast('Não é possível deletar um curso que possui turmas cadastradas.', 'error');
+      return;
+    }
+
+    const confirmDelete = window.confirm('Tem certeza que deseja deletar este curso?');
+    if (!confirmDelete) return;
+
+    try {
+      await deleteCourse(accessToken, courseId);
+      addToast('Curso deletado com sucesso!', 'success');
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao deletar curso.';
       addToast(message, 'error');
     }
   };
@@ -135,8 +159,6 @@ const ProfessorDashboard: React.FC = () => {
       }
     }
   }
-
-  const students = selectedSectionId ? studentsBySection[selectedSectionId] || [] : [];
   
   const renderContent = () => {
     if (activeTab === 'Turmas') {
@@ -173,6 +195,7 @@ const ProfessorDashboard: React.FC = () => {
                   days={section.days}
                   enrolledCount={occupied}
                   onViewStudents={handleViewStudents}
+                  onDelete={handleDeleteSection}
                 />
               );
             })
@@ -199,6 +222,7 @@ const ProfessorDashboard: React.FC = () => {
               code={course.code}
               name={course.name}
               description={course.description}
+              onDelete={handleDeleteCourse}
             />
           ))}
         </S.Grid>
@@ -243,7 +267,8 @@ const ProfessorDashboard: React.FC = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         courseName={selectedCourseName}
-        students={students}
+        sectionId={selectedSectionId}
+        accessToken={accessToken}
       />
 
       <CreateCourseModal
