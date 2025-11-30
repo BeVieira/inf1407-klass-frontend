@@ -9,9 +9,11 @@ export interface CourseCardProps {
   name: string;
   professor: string;
   schedule: string;
+  days: string;
   spots: number;
   totalSpots: number;
   isEnrolled?: boolean;
+  isEnrolling?: boolean;
   onEnroll: (id: number) => void;
 }
 
@@ -21,13 +23,15 @@ const CourseCard: React.FC<CourseCardProps> = ({
   name,
   professor,
   schedule,
+  days,
   spots,
   totalSpots,
   isEnrolled = false,
+  isEnrolling = false,
   onEnroll,
 }) => {
   const isFull = spots >= totalSpots;
-  const canEnroll = !isFull && !isEnrolled;
+  const canEnroll = !isFull && !isEnrolled && !isEnrolling;
 
   return (
     <S.Card>
@@ -47,7 +51,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
         </S.Professor>
       </div>
 
-      <ScheduleTag schedule={schedule} />
+      <ScheduleTag schedule={schedule} days={days} />
 
       <S.Footer>
         <S.Spots>
@@ -59,7 +63,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           disabled={!canEnroll && !isEnrolled}
           $isEnrolled={isEnrolled}
         >
-          {isEnrolled ? 'Cancelar inscrição' : isFull ? 'Lotado' : 'Inscrever-se'}
+          {isEnrolling ? 'Inscrevendo...' : isEnrolled ? 'Cancelar inscrição' : isFull ? 'Lotado' : 'Inscrever-se'}
         </S.EnrollButton>
       </S.Footer>
     </S.Card>

@@ -12,6 +12,10 @@ const getDefaultHeaders = (token?: string) => ({
 });
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
+  if (response.status === 204) {
+    // No Content
+    return {} as T;
+  }
   if (!response.ok) {
     let errorMessage = 'Erro ao comunicar com o servidor.';
     try {
@@ -122,7 +126,6 @@ export interface SectionResponse {
   schedule: string; //Ex.: 10:00-12:00
   vacancies: number;
   capacity: number;
-  enrolled_count?: number;
   occupied_vacancies: number;
 }
 
