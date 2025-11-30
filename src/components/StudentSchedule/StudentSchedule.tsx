@@ -7,6 +7,7 @@ interface Course {
   code: string;
   name: string;
   schedule: string;
+  days: string;
 }
 
 interface StudentScheduleProps {
@@ -16,7 +17,7 @@ interface StudentScheduleProps {
 const StudentSchedule: React.FC<StudentScheduleProps> = ({ courses }) => {
   const slots = useMemo(() => {
     return courses.flatMap((course) =>
-      parseSchedule(course.schedule, course.name, course.code)
+      parseSchedule(course.days, course.schedule, course.name, course.code)
     );
   }, [courses]);
 
@@ -33,7 +34,7 @@ const StudentSchedule: React.FC<StudentScheduleProps> = ({ courses }) => {
       return (
         <S.CourseBlock
           style={{
-            height: `calc(100% * ${slot.end - slot.start} - 4px)`,
+            height: `calc(100% * ${slot.end - slot.start} + ${slot.end - slot.start - 1}px - 4px)`,
             zIndex: 10,
           }}
         >

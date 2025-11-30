@@ -295,6 +295,7 @@ const StudentDashboard: React.FC = () => {
                 code: course.code,
                 name: course.name,
                 schedule: course.schedule,
+                days: course.days,
               }))}
             />
           </div>

@@ -17,11 +17,11 @@ export const Title = styled.h3`
 
 export const Grid = styled.div`
   display: grid;
-  grid-template-columns: 60px repeat(5, 1fr);
+  grid-template-columns: 60px repeat(6, 1fr);
   gap: 1px;
   background-color: #e5e7eb;
   border: 1px solid #e5e7eb;
-  min-width: 600px;
+  min-width: 800px;
 `;
 
 export const HeaderCell = styled.div`
