@@ -124,3 +124,98 @@ export const MobileNavAnchor = styled.a`
     color: #2563eb;
   }
 `;
+
+export const UserMenuContainer = styled.div`
+  position: relative;
+`;
+
+export const UserTrigger = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+`;
+
+export const UserAvatar = styled.div`
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: #dbeafe;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+`;
+
+export const UserInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+`;
+
+export const UserName = styled.span`
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.875rem;
+`;
+
+export const UserRole = styled.span`
+  color: #6b7280;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+`;
+
+export const UserDropdown = styled.div<{ $isOpen: boolean }>`
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  min-width: 12rem;
+  display: ${({ $isOpen }) => ($isOpen ? 'flex' : 'none')};
+  flex-direction: column;
+  z-index: 50;
+`;
+
+export const DropdownItem = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  color: #4b5563;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f3f4f6;
+    color: #1f2937;
+  }
+
+  &.danger {
+    color: #ef4444;
+    &:hover {
+      background-color: #fef2f2;
+      color: #dc2626;
+    }
+  }
+`;
