@@ -22,6 +22,11 @@ export const Header = styled.div`
   align-items: flex-start;
 `;
 
+export const ActionButtons = styled.div`
+  display: flex;
+  gap: 0.25rem;
+`;
+
 export const Code = styled.span`
   font-size: 0.75rem;
   font-weight: 600;
@@ -88,5 +93,22 @@ export const DeleteButton = styled.button`
 
   &:hover {
     background-color: #fee2e2;
+  }
+`;
+
+export const EditButton = styled.button`
+  background: none;
+  border: none;
+  color: #7c3aed;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f5f3ff;
   }
 `;

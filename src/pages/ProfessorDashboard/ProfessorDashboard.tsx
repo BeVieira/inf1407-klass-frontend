@@ -7,6 +7,7 @@ import FilterTabs from '../../components/FilterTabs/FilterTabs';
 import StudentListModal from '../../components/StudentListModal/StudentListModal';
 import CreateCourseModal from '../../components/CreateCourseModal/CreateCourseModal';
 import CreateSectionModal from '../../components/CreateSectionModal/CreateSectionModal';
+import EditSectionModal from '../../components/EditSectionModal/EditSectionModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import {
@@ -17,6 +18,7 @@ import {
   createSection,
   deleteSection,
   deleteCourse,
+  updateSection,
   formatSchedule,
   type CourseResponse,
   type SectionResponse,
@@ -33,10 +35,13 @@ const ProfessorDashboard: React.FC = () => {
 
   const [courses, setCourses] = useState<CourseWithSections[]>([]);
   const [myCourses, setMyCourses] = useState<CourseResponse[]>([]);
+  const [allSections, setAllSections] = useState<SectionResponse[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
+  const [editingSection, setEditingSection] = useState<SectionResponse | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreateSectionModalOpen, setIsCreateSectionModalOpen] = useState(false);
+  const [isEditSectionModalOpen, setIsEditSectionModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [activeTab, setActiveTab] = useState('Turmas');
 
@@ -50,6 +55,7 @@ const ProfessorDashboard: React.FC = () => {
         setMyCourses(myCoursesData);
 
         const allSections = await fetchSections(accessToken);
+        setAllSections(allSections);
 
         const coursesWithSections: CourseWithSections[] = myCoursesData.map((course) => ({
           ...course,
@@ -143,6 +149,28 @@ const ProfessorDashboard: React.FC = () => {
     }
   };
 
+  const handleEditSection = (sectionId: number) => {
+    const section = allSections.find(s => s.id === sectionId);
+    if (section) {
+      setEditingSection(section);
+      setIsEditSectionModalOpen(true);
+    }
+  };
+
+  const handleUpdateSection = async (sectionId: number, sectionData: { course?: number; days?: string; schedule?: string; vacancies?: number }) => {
+    if (!accessToken) return;
+
+    try {
+      await updateSection(accessToken, sectionId, sectionData);
+      addToast('Turma atualizada com sucesso!', 'success');
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao atualizar turma.';
+      addToast(message, 'error');
+      throw error;
+    }
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedSectionId(null);
@@ -196,6 +224,7 @@ const ProfessorDashboard: React.FC = () => {
                   enrolledCount={occupied}
                   onViewStudents={handleViewStudents}
                   onDelete={handleDeleteSection}
+                  onEdit={handleEditSection}
                 />
               );
             })
@@ -282,6 +311,14 @@ const ProfessorDashboard: React.FC = () => {
         onClose={() => setIsCreateSectionModalOpen(false)}
         courses={myCourses}
         onSubmit={handleCreateSection}
+      />
+
+      <EditSectionModal
+        isOpen={isEditSectionModalOpen}
+        onClose={() => setIsEditSectionModalOpen(false)}
+        courses={myCourses}
+        section={editingSection}
+        onSubmit={handleUpdateSection}
       />
     </S.Page>
   );

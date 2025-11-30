@@ -17,19 +17,56 @@ export const Main = styled.main`
 `;
 
 export const Header = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+`;
+
+export const HeaderContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 export const Title = styled.h1`
   font-size: 1.875rem;
   font-weight: 700;
   color: #111827;
-  margin-bottom: 0.5rem;
+  margin: 0;
 `;
 
 export const Subtitle = styled.p`
   color: #6b7280;
   font-size: 1rem;
+  margin: 0;
+`;
+
+export const CreateButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #7c3aed;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+
+  span {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  &:hover {
+    background-color: #6d28d9;
+  }
 `;
 
 export const Controls = styled.div`

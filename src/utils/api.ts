@@ -100,6 +100,12 @@ export const deleteEnrollment = (token: string, enrollmentId: number) =>
 export const deleteSection = (token: string, sectionId: number) =>
   apiRequest<void>(`/courses/sections/${sectionId}/`, { method: 'DELETE' }, token);
 
+export const updateSection = (token: string, sectionId: number, payload: { course?: number; days?: string; schedule?: string; vacancies?: number }) =>
+  apiRequest<SectionResponse>(`/courses/sections/${sectionId}/`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  }, token);
+
 export const deleteCourse = (token: string, courseId: number) =>
   apiRequest<void>(`/courses/courses/${courseId}/`, { method: 'DELETE' }, token);
 

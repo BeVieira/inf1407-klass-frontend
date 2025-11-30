@@ -1,80 +1,173 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
-import SearchBar from '../../components/Search/SearchBar';
+import CourseCardProfessor from '../../components/CourseCardProfessor/CourseCardProfessor';
+import CourseListCard from '../../components/CourseListCard/CourseListCard';
 import FilterTabs from '../../components/FilterTabs/FilterTabs';
-import AdminCourseCard from '../../components/AdminCourseCard/AdminCourseCard';
-import StudentListModal, { type Student } from '../../components/StudentListModal/StudentListModal';
+import StudentListModal from '../../components/StudentListModal/StudentListModal';
+import CreateCourseModal from '../../components/CreateCourseModal/CreateCourseModal';
+import CreateSectionModal from '../../components/CreateSectionModal/CreateSectionModal';
+import EditSectionModal from '../../components/EditSectionModal/EditSectionModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import {
   computeVacancies,
-  fetchEnrollments,
   fetchSections,
+  fetchCourses,
+  createCourse,
+  createSection,
+  deleteSection,
+  deleteCourse,
+  updateSection,
   formatSchedule,
-  resolveCourseData,
+  type CourseResponse,
+  type SectionResponse,
 } from '../../utils/api';
 import * as S from './styled';
+
+interface CourseWithSections extends CourseResponse {
+  sections: SectionResponse[];
+};
 
 const AdminDashboard: React.FC = () => {
   const { accessToken } = useAuth();
   const { addToast } = useToast();
 
-  const [sectionCards, setSectionCards] = useState<Array<{ id: number; code: string; name: string; professor: string; schedule: string; spots: number; totalSpots: number; enrolledCount: number }>>([]);
-  const [studentsBySection, setStudentsBySection] = useState<Record<number, Student[]>>({});
+  const [courses, setCourses] = useState<CourseWithSections[]>([]);
+  const [allCourses, setAllCourses] = useState<CourseResponse[]>([]);
+  const [allSections, setAllSections] = useState<SectionResponse[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
+  const [editingSection, setEditingSection] = useState<SectionResponse | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('Todos');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateSectionModalOpen, setIsCreateSectionModalOpen] = useState(false);
+  const [isEditSectionModalOpen, setIsEditSectionModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [activeTab, setActiveTab] = useState('Turmas');
 
-useEffect(() => {
+  useEffect(() => {
     if (!accessToken) return;
 
-    const loadData = async () => {
+    const loadCoursesAndSections = async () => {
       try {
-        const allSections = await fetchSections(accessToken);
+        const allCoursesData = await fetchCourses(accessToken);
+        setAllCourses(allCoursesData);
 
-        const cards = allSections.map((section) => {
-          const course = resolveCourseData(section);
-          const { occupied, totalSpots } = computeVacancies(section);
-          return {
-            id: section.id,
-            code: course.code || `DISC-${course.id}`,
-            name: course.name || course.title || `Curso ${course.id}`,
-            professor: course.professor_name || 'Professor responsável',
-            schedule: formatSchedule(section),
-            spots: occupied,
-            totalSpots: totalSpots || occupied || 0,
-            enrolledCount: occupied,
-          };
-        });
-        setSectionCards(cards);
+        const allSectionsData = await fetchSections(accessToken);
+        setAllSections(allSectionsData);
+
+        const coursesWithSections: CourseWithSections[] = allCoursesData.map((course) => ({
+          ...course,
+          sections: allSectionsData.filter((section) => section.course === course.id),
+        }));
+
+        setCourses(coursesWithSections);
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Erro ao carregar disciplinas.';
+        const message = error instanceof Error ? error.message : 'Erro ao carregar turmas.';
         addToast(message, 'error');
       }
     };
 
-    loadData();
-  }, [accessToken, addToast]);
+    loadCoursesAndSections();
+  }, [accessToken, refreshTrigger, addToast]);
 
-  const handleViewStudents = async (sectionId: number) => {
+  const handleCreateCourse = async (courseData: { code: string; name: string; description: string }) => {
+    if (!accessToken) return;
+
+    try {
+      // Admin não precisa definir owner, o backend deve lidar com isso
+      await createCourse(accessToken, { ...courseData, owner: 0 }); // Placeholder, ajuste conforme necessário
+      addToast('Curso criado com sucesso!', 'success');
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao criar curso.';
+      addToast(message, 'error');
+      throw error;
+    }
+  };
+
+  const handleCreateSection = async (sectionData: { courseId: number; days: string; schedule: string; vacancies: number }) => {
+    if (!accessToken) return;
+
+    try {
+      await createSection(accessToken, {
+        course: sectionData.courseId,
+        days: sectionData.days,
+        schedule: sectionData.schedule,
+        vacancies: sectionData.vacancies,
+      });
+      addToast('Turma criada com sucesso!', 'success');
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao criar turma.';
+      addToast(message, 'error');
+      throw error;
+    }
+  };
+
+  const handleViewStudents = (sectionId: number) => {
     setSelectedSectionId(sectionId);
     setIsModalOpen(true);
+  };
 
+  const handleDeleteSection = async (sectionId: number) => {
     if (!accessToken) return;
+
+    const confirmDelete = window.confirm('Tem certeza que deseja deletar esta turma?');
+    if (!confirmDelete) return;
+
     try {
-      const enrollments = await fetchEnrollments(accessToken, sectionId);
-      const students: Student[] = enrollments.map((enrollment) => ({
-        id: enrollment.student_detail?.id || enrollment.student || enrollment.id,
-        name: enrollment.student_detail?.username || 'Estudante inscrito',
-        email: enrollment.student_detail?.email || 'E-mail não informado',
-        matricula: enrollment.student_detail?.registration || 'Matrícula não informada',
-      }));
-      setStudentsBySection((prev) => ({ ...prev, [sectionId]: students }));
+      await deleteSection(accessToken, sectionId);
+      addToast('Turma deletada com sucesso!', 'success');
+      setRefreshTrigger((prev) => prev + 1);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao carregar alunos.';
+      const message = error instanceof Error ? error.message : 'Erro ao deletar turma.';
       addToast(message, 'error');
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: number) => {
+    if (!accessToken) return;
+
+    // Verificar se o curso tem turmas
+    const course = courses.find(c => c.id === courseId);
+    if (course && course.sections.length > 0) {
+      addToast('Não é possível deletar um curso que possui turmas cadastradas.', 'error');
+      return;
+    }
+
+    const confirmDelete = window.confirm('Tem certeza que deseja deletar este curso?');
+    if (!confirmDelete) return;
+
+    try {
+      await deleteCourse(accessToken, courseId);
+      addToast('Curso deletado com sucesso!', 'success');
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao deletar curso.';
+      addToast(message, 'error');
+    }
+  };
+
+  const handleEditSection = (sectionId: number) => {
+    const section = allSections.find(s => s.id === sectionId);
+    if (section) {
+      setEditingSection(section);
+      setIsEditSectionModalOpen(true);
+    }
+  };
+
+  const handleUpdateSection = async (sectionId: number, sectionData: { course?: number; days?: string; schedule?: string; vacancies?: number }) => {
+    if (!accessToken) return;
+
+    try {
+      await updateSection(accessToken, sectionId, sectionData);
+      addToast('Turma atualizada com sucesso!', 'success');
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao atualizar turma.';
+      addToast(message, 'error');
+      throw error;
     }
   };
 
@@ -83,72 +176,149 @@ useEffect(() => {
     setSelectedSectionId(null);
   };
 
- const filteredCards = useMemo(() => {
-    const term = searchTerm.toLowerCase();
-    return sectionCards
-      .filter((course) =>
-        course.name.toLowerCase().includes(term) ||
-        course.code.toLowerCase().includes(term) ||
-        course.professor.toLowerCase().includes(term)
-      )
-      .sort((a, b) => {
-        if (activeTab === 'Por horário') {
-          return a.schedule.localeCompare(b.schedule);
-        }
-        if (activeTab === 'Por professor') {
-          return a.professor.localeCompare(b.professor);
-        }
-        return 0;
-      });
-  }, [sectionCards, searchTerm, activeTab]);
+  // Encontrar a section selecionada e o curso correspondente
+  let selectedCourseName = 'Turma';
+  if (selectedSectionId) {
+    for (const course of courses) {
+      const section = course.sections.find((s) => s.id === selectedSectionId);
+      if (section) {
+        selectedCourseName = `${course.name} - ${formatSchedule(section)}`;
+        break;
+      }
+    }
+  }
+  
+  const renderContent = () => {
+    if (activeTab === 'Turmas') {
+      if (courses.length === 0) {
+        return (
+           <S.EmptyState>
+            <p>Nenhuma turma cadastrada.</p>
+          </S.EmptyState>
+        );
+      }
 
-  const students = selectedSectionId ? studentsBySection[selectedSectionId] || [] : [];
+      const hasSections = courses.some(c => c.sections.length > 0);
+
+      if (!hasSections) {
+         return (
+           <S.EmptyState>
+            <p>Nenhuma turma cadastrada.</p>
+          </S.EmptyState>
+        );
+      }
+
+      return (
+        <S.Grid>
+          {courses.map((course) =>
+            course.sections.map((section) => {
+              const { occupied } = computeVacancies(section);
+              return (
+                <CourseCardProfessor
+                  key={section.id}
+                  id={section.id}
+                  code={course.code}
+                  name={course.name}
+                  schedule={formatSchedule(section)}
+                  days={section.days}
+                  enrolledCount={occupied}
+                  onViewStudents={handleViewStudents}
+                  onDelete={handleDeleteSection}
+                  onEdit={handleEditSection}
+                />
+              );
+            })
+          )}
+        </S.Grid>
+      );
+    }
+
+    if (activeTab === 'Disciplinas') {
+      if (allCourses.length === 0) {
+        return (
+          <S.EmptyState>
+            <p>Nenhuma disciplina cadastrada.</p>
+          </S.EmptyState>
+        );
+      }
+
+      return (
+        <S.Grid>
+          {allCourses.map((course) => (
+            <CourseListCard
+              key={course.id}
+              id={course.id}
+              code={course.code}
+              name={course.name}
+              description={course.description}
+              onDelete={handleDeleteCourse}
+            />
+          ))}
+        </S.Grid>
+      );
+    }
+  };
 
   return (
     <S.Page>
       <Header />
       <S.Main>
         <S.Header>
-          <S.Title>Painel do Administrador</S.Title>
-          <S.Subtitle>Visualize todas as disciplinas, turmas e matrículas.</S.Subtitle>
+          <S.HeaderContent>
+            <S.Title>Painel do Administrador</S.Title>
+            <S.Subtitle>Gerencie todas as turmas e disciplinas do sistema.</S.Subtitle>
+          </S.HeaderContent>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <S.CreateButton onClick={() => setIsCreateSectionModalOpen(true)}>
+              <span>+</span>
+              Criar Nova Turma
+            </S.CreateButton>
+            <S.CreateButton onClick={() => setIsCreateModalOpen(true)}>
+              <span>+</span>
+              Criar Novo Curso
+            </S.CreateButton>
+          </div>
         </S.Header>
 
-        <S.Controls>
+        <div style={{ marginBottom: '1.5rem' }}>
           <FilterTabs
-            tabs={['Todos', 'Por horário', 'Por professor']}
+            tabs={['Turmas', 'Disciplinas']}
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
-          <SearchBar
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Buscar por disciplina, código ou professor..."
-          />
-        </S.Controls>
+        </div>
 
-        {filteredCards.length > 0 ? (
-          <S.Grid>
-            {filteredCards.map((course) => (
-              <AdminCourseCard
-                key={course.id}
-                {...course}
-                onViewDetails={handleViewStudents}
-              />
-            ))}
-          </S.Grid>
-        ) : (
-          <S.EmptyState>
-            <p>Nenhuma disciplina encontrada.</p>
-          </S.EmptyState>
-        )}
+        {renderContent()}
       </S.Main>
       <Footer />
 
       <StudentListModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        courseName={sectionCards.find((c) => c.id === selectedSectionId)?.name || 'Turma'}
-        students={students}
+        courseName={selectedCourseName}
+        sectionId={selectedSectionId}
+        accessToken={accessToken}
+      />
+
+      <CreateCourseModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateCourse}
+      />
+
+      <CreateSectionModal
+        isOpen={isCreateSectionModalOpen}
+        onClose={() => setIsCreateSectionModalOpen(false)}
+        courses={allCourses}
+        onSubmit={handleCreateSection}
+      />
+
+      <EditSectionModal
+        isOpen={isEditSectionModalOpen}
+        onClose={() => setIsEditSectionModalOpen(false)}
+        courses={allCourses}
+        section={editingSection}
+        onSubmit={handleUpdateSection}
       />
     </S.Page>
   );
