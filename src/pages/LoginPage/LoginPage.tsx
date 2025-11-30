@@ -80,7 +80,7 @@ const LoginPage: React.FC = () => {
 
             <S.Actions>
               <div />
-              <S.ForgotPassword to="#">Esqueceu a senha?</S.ForgotPassword>
+              <S.ForgotPassword to="/forgot-password">Esqueceu a senha?</S.ForgotPassword>
             </S.Actions>
 
             <S.PrimaryButton type="submit" disabled={isSubmitting}>
