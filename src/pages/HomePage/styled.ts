@@ -7,6 +7,7 @@ export const Page = styled.div`
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
   color: #1f2937;
+  scroll-behavior: smooth;
 `;
 
 export const Main = styled.main`

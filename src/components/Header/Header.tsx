@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { CalendarClock, LogOut, Menu, X, ChevronDown, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import * as S from './styled';
@@ -7,6 +7,11 @@ import * as S from './styled';
 const Header: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const getHashLink = (hash: string) => {
+    return location.pathname === '/' ? hash : `/${hash}`;
+  };
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -70,9 +75,9 @@ const Header: React.FC = () => {
       {/* Desktop Nav - Only for unauthenticated users */}
       {!isAuthenticated && (
         <S.Nav>
-          <S.NavLink to="/">Início</S.NavLink>
-          <S.NavAnchor href="#disciplinas">Disciplinas</S.NavAnchor>
-          <S.NavAnchor href="#como-funciona">Como funciona</S.NavAnchor>
+          <S.NavAnchor href={getHashLink('#inicio')}>Início</S.NavAnchor>
+          <S.NavAnchor href={getHashLink('#disciplinas')}>Disciplinas</S.NavAnchor>
+          <S.NavAnchor href={getHashLink('#como-funciona')}>Como funciona</S.NavAnchor>
           <S.LoginButton to="/login">Login</S.LoginButton>
         </S.Nav>
       )}
@@ -113,9 +118,9 @@ const Header: React.FC = () => {
 
       {/* Mobile Menu - Only for unauthenticated users */}
       <S.MobileMenu $isOpen={isMenuOpen && !isAuthenticated}>
-        <S.MobileNavLink to="/" onClick={() => setIsMenuOpen(false)}>Início</S.MobileNavLink>
-        <S.MobileNavAnchor href="#disciplinas" onClick={() => setIsMenuOpen(false)}>Disciplinas</S.MobileNavAnchor>
-        <S.MobileNavAnchor href="#como-funciona" onClick={() => setIsMenuOpen(false)}>Como funciona</S.MobileNavAnchor>
+        <S.MobileNavAnchor href={getHashLink('#inicio')} onClick={() => setIsMenuOpen(false)}>Início</S.MobileNavAnchor>
+        <S.MobileNavAnchor href={getHashLink('#disciplinas')} onClick={() => setIsMenuOpen(false)}>Disciplinas</S.MobileNavAnchor>
+        <S.MobileNavAnchor href={getHashLink('#como-funciona')} onClick={() => setIsMenuOpen(false)}>Como funciona</S.MobileNavAnchor>
         <S.LoginButton to="/login" onClick={() => setIsMenuOpen(false)} style={{ textAlign: 'center' }}>Login</S.LoginButton>
       </S.MobileMenu>
     </S.HeaderContainer>

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { GraduationCap, BookOpen, ClipboardList, Search, CheckSquare, CalendarDays } from 'lucide-react';
 import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
@@ -7,8 +8,21 @@ import CoursePreviewList from '../../components/CoursePreviewList/CoursePreviewL
 import * as S from './styled';
 
 const HomePage: React.FC = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const element = document.getElementById(location.hash.substring(1));
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [location]);
+
   return (
-    <S.Page>
+    <S.Page id="inicio">
       <Header />
       
       <S.Main>
