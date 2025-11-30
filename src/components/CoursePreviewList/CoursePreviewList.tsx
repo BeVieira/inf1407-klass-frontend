@@ -1,51 +1,51 @@
 import React, { useState } from 'react';
-import { User, Clock } from 'lucide-react';
-import type { Disciplina } from '../../types/Disciplina';
+import { User, BookOpen } from 'lucide-react';
+import type { Course } from '../../types/Course';
 import SearchBar from '../Search/SearchBar';
 import * as S from './styled';
 
-const MOCK_COURSES: Disciplina[] = [
+const MOCK_COURSES: Course[] = [
   {
     id: 1,
-    codigo: 'COMP101',
-    nome: 'Introdução à Programação',
+    code: 'COMP101',
+    name: 'Introdução à Programação',
     professor: 'Dr. Alan Turing',
-    horariosResumo: '2ª e 4ª, 08h–10h',
+    description: 'Fundamentos de algoritmos e lógica de programação.',
   },
   {
     id: 2,
-    codigo: 'MAT202',
-    nome: 'Cálculo II',
+    code: 'MAT202',
+    name: 'Cálculo II',
     professor: 'Dra. Ada Lovelace',
-    horariosResumo: '3ª e 5ª, 10h–12h',
+    description: 'Estudo de integrais, séries e equações diferenciais.',
   },
   {
     id: 3,
-    codigo: 'FIS303',
-    nome: 'Física Clássica',
+    code: 'FIS303',
+    name: 'Física Clássica',
     professor: 'Dr. Isaac Newton',
-    horariosResumo: '2ª, 4ª e 6ª, 14h–16h',
+    description: 'Leis do movimento, energia e gravitação.',
   },
   {
     id: 4,
-    codigo: 'COMP204',
-    nome: 'Estrutura de Dados',
+    code: 'COMP204',
+    name: 'Estrutura de Dados',
     professor: 'Dr. Grace Hopper',
-    horariosResumo: '3ª e 5ª, 16h–18h',
+    description: 'Listas, pilhas, filas, árvores e grafos.',
   },
   {
     id: 5,
-    codigo: 'EST405',
-    nome: 'Probabilidade e Estatística',
+    code: 'EST405',
+    name: 'Probabilidade e Estatística',
     professor: 'Dr. Andrey Kolmogorov',
-    horariosResumo: '6ª, 08h–12h',
+    description: 'Análise de dados, probabilidade e inferência estatística.',
   },
   {
     id: 6,
-    codigo: 'COMP306',
-    nome: 'Banco de Dados',
+    code: 'COMP306',
+    name: 'Banco de Dados',
     professor: 'Dr. Edgar Codd',
-    horariosResumo: '2ª e 4ª, 18h–20h',
+    description: 'Modelagem de dados, SQL e sistemas gerenciadores.',
   },
 ];
 
@@ -54,8 +54,8 @@ const CoursePreviewList: React.FC = () => {
 
   const filteredCourses = MOCK_COURSES.filter(
     (course) =>
-      course.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+      course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -71,17 +71,17 @@ const CoursePreviewList: React.FC = () => {
           {filteredCourses.map((course) => (
             <S.Card key={course.id}>
               <S.CardHeader>
-                <S.CourseCode>{course.codigo}</S.CourseCode>
+                <S.CourseCode>{course.code}</S.CourseCode>
               </S.CardHeader>
-              <S.CourseName>{course.nome}</S.CourseName>
+              <S.CourseName>{course.name}</S.CourseName>
               <S.CardBody>
                 <S.InfoRow>
                   <User size={16} />
                   <span>{course.professor}</span>
                 </S.InfoRow>
                 <S.InfoRow>
-                  <Clock size={16} />
-                  <span>{course.horariosResumo}</span>
+                  <BookOpen size={16} />
+                  <span>{course.description}</span>
                 </S.InfoRow>
               </S.CardBody>
             </S.Card>
