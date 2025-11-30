@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarClock, LogOut, Menu, X, ChevronDown } from 'lucide-react';
+import { CalendarClock, LogOut, Menu, X, ChevronDown, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import * as S from './styled';
 
@@ -91,6 +91,10 @@ const Header: React.FC = () => {
               </S.UserTrigger>
 
               <S.UserDropdown $isOpen={isUserMenuOpen}>
+                <S.DropdownItem onClick={() => { navigate('/perfil'); setIsUserMenuOpen(false); }}>
+                  <User size={16} />
+                  Meu Perfil
+                </S.DropdownItem>
                 <S.DropdownItem onClick={handleLogout} className="danger">
                   <LogOut size={16} />
                   Sair

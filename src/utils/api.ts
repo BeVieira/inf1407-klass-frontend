@@ -1,4 +1,5 @@
-const API_BASE_URL = 'https://klassapi.pythonanywhere.com/api';//(import.meta.env.VITE_API_BASE_URL || 'https://klassapi.pythonanywhere.com/api').replace(/\/$/, '');
+const API_BASE_URL = 'https://klassapi.pythonanywhere.com/api';
+
 type ApiRequestOptions = RequestInit & { skipAuth?: boolean };
 
 interface TokenPair {
@@ -21,9 +22,9 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
     try {
       const data = await response.json();
       errorMessage = data.detail || data.error || JSON.stringify(data);
-  } catch {
-    // ignore json parse errors
-  }
+    } catch {
+      // ignore json parse errors
+    }
     throw new Error(errorMessage);
   }
   return response.json() as Promise<T>;
@@ -95,6 +96,12 @@ export const enrollInSection = (token: string, sectionId: number) =>
 
 export const deleteEnrollment = (token: string, enrollmentId: number) =>
   apiRequest<void>(`/enrollments/enrollments/${enrollmentId}/`, { method: 'DELETE' }, token);
+
+export const changePassword = (token: string, payload: { old_password: string; new_password: string }) =>
+  apiRequest<void>('/accounts/change-password/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, token);
 
 export interface UserResponse {
   id: number;

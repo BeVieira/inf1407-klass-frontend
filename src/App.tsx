@@ -5,6 +5,7 @@ import ProfessorDashboard from './pages/ProfessorDashboard/ProfessorDashboard';
 import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
 import LoginPage from "./pages/LoginPage/LoginPage";
 import RegisterPage from "./pages/RegisterPage/RegisterPage";
+import UserProfile from "./pages/UserProfile/UserProfile";
 import { ToastProvider } from './contexts/ToastContext';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -18,6 +19,7 @@ function App() {
             <Route path="/dashboard/estudante" element={<StudentDashboard />} />
             <Route path="/dashboard/professor" element={<ProfessorDashboard />} />
             <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            <Route path="/perfil" element={<UserProfile />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Routes>
