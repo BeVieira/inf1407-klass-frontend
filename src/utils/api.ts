@@ -103,6 +103,18 @@ export const changePassword = (token: string, payload: { old_password: string; n
     body: JSON.stringify(payload),
   }, token);
 
+export const requestPasswordReset = (email: string) =>
+  apiRequest<void>('/accounts/password-reset/', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+
+export const confirmPasswordReset = (payload: { new_password: string; token: string; uidb64: string }) =>
+  apiRequest<void>('/accounts/password-reset-confirm/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
 export interface UserResponse {
   id: number;
   username: string;
