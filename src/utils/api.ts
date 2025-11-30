@@ -1,5 +1,4 @@
-const API_BASE_URL = 'klassapi.pythonanywhere.com/api';//(import.meta.env.VITE_API_BASE_URL || 'klassapi.pythonanywhere.com/api').replace(/\/$/, '');
-
+const API_BASE_URL = 'https://klassapi.pythonanywhere.com/api';//(import.meta.env.VITE_API_BASE_URL || 'https://klassapi.pythonanywhere.com/api').replace(/\/$/, '');
 type ApiRequestOptions = RequestInit & { skipAuth?: boolean };
 
 interface TokenPair {
@@ -58,8 +57,23 @@ export const registerUser = (payload: RegisterPayload) =>
     body: JSON.stringify(payload),
   });
 
+export const fetchCourses = (token: string) =>
+  apiRequest<CourseResponse[]>('/courses/courses/', { method: 'GET' }, token);
+
+export const createCourse = (token: string, payload: { code: string; name: string; description: string; owner: number }) =>
+  apiRequest<CourseResponse>('/courses/courses/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, token);
+
 export const fetchSections = (token: string) =>
   apiRequest<SectionResponse[]>('/courses/sections/', { method: 'GET' }, token);
+
+export const createSection = (token: string, payload: { course: number; days: string; schedule: string; vacancies: number }) =>
+  apiRequest<SectionResponse>('/courses/sections/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, token);
 
 export const fetchEnrollments = (token: string, sectionId?: number) => {
   const query = sectionId ? `?section=${sectionId}` : '';
@@ -95,11 +109,10 @@ export interface RegisterPayload {
 
 export interface CourseResponse {
   id: number;
-  code?: string;
-  name?: string;
-  title?: string;
-  owner?: number;
-  professor_name?: string;
+  code: string;
+  name: string;
+  description: string;
+  owner: number;
 }
 
 export interface SectionResponse {

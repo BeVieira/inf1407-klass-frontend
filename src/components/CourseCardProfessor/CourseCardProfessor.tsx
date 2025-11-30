@@ -8,6 +8,7 @@ export interface CourseCardProfessorProps {
   code: string;
   name: string;
   schedule: string;
+  days: string;
   enrolledCount: number;
   onViewStudents: (id: number) => void;
 }
@@ -17,6 +18,7 @@ const CourseCardProfessor: React.FC<CourseCardProfessorProps> = ({
   code,
   name,
   schedule,
+  days,
   enrolledCount,
   onViewStudents,
 }) => {
@@ -29,7 +31,7 @@ const CourseCardProfessor: React.FC<CourseCardProfessorProps> = ({
         <S.Title>{name}</S.Title>
       </div>
 
-      <ScheduleTag schedule={schedule} />
+      <ScheduleTag days={days} schedule={schedule}/>
 
       <S.Footer>
         <S.EnrolledCount>

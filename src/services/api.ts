@@ -2,7 +2,6 @@ export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "https://klassapi.pythonanywhere.com";
 
 
-console.log("api baseURL", API_BASE_URL);
 export class ApiError extends Error {
   status: number;
 
@@ -57,7 +56,6 @@ export async function apiRequest<T>(
   init?: RequestInit
 ): Promise<T> {
   const url = buildApiUrl(path);
-  console.log("url", url);
 
   const response = await fetch(url, {
     ...init,
