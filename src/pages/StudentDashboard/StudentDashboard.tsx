@@ -9,15 +9,17 @@ import StudentSchedule from '../../components/StudentSchedule/StudentSchedule';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import {
-  computeVacancies,
   deleteEnrollment,
   enrollInSection,
   fetchMyEnrollments,
   fetchSections,
+  fetchCourses,
+  fetchUserProfile,
   formatSchedule,
-  resolveCourseData,
   type EnrollmentResponse,
   type SectionResponse,
+  type CourseResponse,
+  type UserResponse,
 } from "../../utils/api";
 import * as S from './styled';
 
@@ -26,10 +28,13 @@ const StudentDashboard: React.FC = () => {
   const { addToast } = useToast();
 
   const [sections, setSections] = useState<SectionResponse[]>([]);
+  const [courses, setCourses] = useState<CourseResponse[]>([]);
+  const [professors, setProfessors] = useState<Record<number, UserResponse>>({});
   const [enrollmentMap, setEnrollmentMap] = useState<Record<number, EnrollmentResponse>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('Todos');
   const [loading, setLoading] = useState(false);
+  const [enrollingSection, setEnrollingSection] = useState<number | null>(null);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,12 +46,32 @@ const StudentDashboard: React.FC = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [sectionsResponse, myEnrollments] = await Promise.all([
+        const [sectionsResponse, coursesResponse, myEnrollments] = await Promise.all([
           fetchSections(accessToken),
+          fetchCourses(accessToken),
           fetchMyEnrollments(accessToken),
         ]);
 
         setSections(sectionsResponse);
+        setCourses(coursesResponse);
+
+        // Buscar dados dos professores (owners)
+        const uniqueOwnerIds = [...new Set(coursesResponse.map(c => c.owner))];
+        const professorsData: Record<number, UserResponse> = {};
+        
+        await Promise.all(
+          uniqueOwnerIds.map(async (ownerId) => {
+            try {
+              const prof = await fetchUserProfile(ownerId, accessToken);
+              professorsData[ownerId] = prof;
+            } catch (error) {
+              console.error(`Erro ao buscar professor ${ownerId}:`, error);
+            }
+          })
+        );
+        
+        setProfessors(professorsData);
+
         const map: Record<number, EnrollmentResponse> = {};
         myEnrollments.forEach((enrollment) => {
           const sectionId = typeof enrollment.section === 'object'
@@ -65,6 +90,17 @@ const StudentDashboard: React.FC = () => {
 
     loadData();
   }, [accessToken, addToast]);
+
+  const reloadSections = async () => {
+    if (!accessToken) return;
+    
+    try {
+      const sectionsResponse = await fetchSections(accessToken);
+      setSections(sectionsResponse);
+    } catch (error) {
+      console.error('Erro ao recarregar sections:', error);
+    }
+  };
 
   const handleEnrollClick = (sectionId: number) => {
     if (enrollmentMap[sectionId]) {
@@ -86,19 +122,37 @@ const StudentDashboard: React.FC = () => {
       return;
     }
 
-     try {
+    // Validar se há vagas disponíveis
+    const section = sections.find(s => s.id === sectionId);
+    if (section) {
+      const totalSpots = section.vacancies;
+      const occupiedSpots = section.occupied_vacancies;
+      
+      if (occupiedSpots >= totalSpots) {
+        addToast('Não há vagas disponíveis nesta turma.', 'error');
+        return;
+      }
+    }
+
+    setEnrollingSection(sectionId);
+    try {
       const enrollment = await enrollInSection(accessToken, sectionId);
       setEnrollmentMap((prev) => ({ ...prev, [sectionId]: enrollment }));
+      
+      // Recarregar sections para obter a contagem atualizada
+      await reloadSections();
+      
       addToast('Inscrição realizada com sucesso!', 'success');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível realizar a inscrição.';
       addToast(message, 'error');
+    } finally {
+      setEnrollingSection(null);
     }
   };
 
   const confirmUnenroll = async () => {
     if (!sectionToUnenroll || !accessToken) return;
-
     const enrollment = enrollmentMap[sectionToUnenroll];
     if (!enrollment) return;
 
@@ -109,9 +163,14 @@ const StudentDashboard: React.FC = () => {
         delete copy[sectionToUnenroll];
         return copy;
       });
+      
+      // Recarregar sections para obter a contagem atualizada
+      await reloadSections();
+      
       addToast('Inscrição cancelada com sucesso!', 'info');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível cancelar a inscrição.';
+      console.error('Erro ao cancelar inscrição:', error);
       addToast(message, 'error');
     } finally {
       closeModal();
@@ -119,21 +178,37 @@ const StudentDashboard: React.FC = () => {
   };
 
   const courseLookup = useMemo(() => {
-    const lookup: Record<number, ReturnType<typeof resolveCourseData>> = {};
-    sections.forEach((section) => {
-      const course = resolveCourseData(section);
+    const lookup: Record<number, CourseResponse> = {};
+    courses.forEach((course) => {
       lookup[course.id] = course;
     });
     return lookup;
-  }, [sections]);
+  }, [courses]);
 
   const normalizedCourses = useMemo(() => {
     return sections.map((section) => {
-      const course = resolveCourseData(section, courseLookup);
-      const { occupied, totalSpots } = computeVacancies(section);
-      const professor = course.professor_name || 'Professor responsável';
-      const name = course.name || course.title || `Curso ${course.id}`;
-      const code = course.code || `DISC-${course.id}`;
+      const course = courseLookup[section.course];
+      const enrolledCount = section.occupied_vacancies;
+      const totalSpots = section.vacancies;
+      
+      if (!course) {
+        // Fallback se o curso não for encontrado
+        return {
+          id: section.id,
+          code: `DISC-${section.course}`,
+          name: `Curso ${section.course}`,
+          professor: 'Professor não informado',
+          schedule: formatSchedule(section),
+          days: section.days || '',
+          spots: enrolledCount,
+          totalSpots: totalSpots,
+          isEnrolled: !!enrollmentMap[section.id],
+        };
+      }
+
+      const professor = professors[course.owner]?.username || 'Professor não informado';
+      const name = course.name;
+      const code = course.code;
       const schedule = formatSchedule(section);
 
       return {
@@ -142,12 +217,13 @@ const StudentDashboard: React.FC = () => {
         name,
         professor,
         schedule,
-        spots: occupied,
-        totalSpots: totalSpots || occupied || 0,
+        days: section.days || '',
+        spots: enrolledCount,
+        totalSpots: totalSpots,
         isEnrolled: !!enrollmentMap[section.id],
       };
     });
-  }, [sections, courseLookup, enrollmentMap]);
+  }, [sections, courseLookup, professors, enrollmentMap]);
 
   const filteredCourses = normalizedCourses
     .filter((course) => {
@@ -200,6 +276,7 @@ const StudentDashboard: React.FC = () => {
               <CourseCard
                 key={course.id}
                 {...course}
+                isEnrolling={enrollingSection === course.id}
                 onEnroll={handleEnrollClick}
               />
             ))}
