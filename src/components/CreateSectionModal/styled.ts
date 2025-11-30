@@ -37,28 +37,22 @@ export const Input = styled.input`
   }
 `;
 
-export const TextArea = styled.textarea`
+export const Select = styled.select`
   padding: 0.625rem 0.875rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   color: #111827;
-  resize: vertical;
-  font-family: inherit;
+  background-color: white;
   transition: border-color 0.2s;
+  cursor: pointer;
 
   &:focus {
     outline: none;
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   }
-
-  &::placeholder {
-    color: #9ca3af;
-  }
 `;
-
-
 
 export const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   padding: 0.625rem 1.25rem;

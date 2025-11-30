@@ -69,6 +69,12 @@ export const createCourse = (token: string, payload: { code: string; name: strin
 export const fetchSections = (token: string) =>
   apiRequest<SectionResponse[]>('/courses/sections/', { method: 'GET' }, token);
 
+export const createSection = (token: string, payload: { course: number; days: string; schedule: string; vacancies: number }) =>
+  apiRequest<SectionResponse>('/courses/sections/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, token);
+
 export const fetchEnrollments = (token: string, sectionId?: number) => {
   const query = sectionId ? `?section=${sectionId}` : '';
   return apiRequest<EnrollmentResponse[]>(`/enrollments/enrollments/${query}`, { method: 'GET' }, token);
