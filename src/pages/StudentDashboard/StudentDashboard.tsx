@@ -244,6 +244,8 @@ const StudentDashboard: React.FC = () => {
       return 0;
     });
 
+
+
   return (
     <S.Page>
       <Header />
@@ -271,16 +273,18 @@ const StudentDashboard: React.FC = () => {
             <p>Carregando disciplinas...</p>
           </S.EmptyState>
         ) : filteredCourses.length > 0 ? (
-          <S.Grid>
-            {filteredCourses.map((course) => (
-              <CourseCard
-                key={course.id}
-                {...course}
-                isEnrolling={enrollingSection === course.id}
-                onEnroll={handleEnrollClick}
-              />
-            ))}
-          </S.Grid>
+          <S.ScrollableGridContainer>
+            <S.Grid>
+              {filteredCourses.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  {...course}
+                  isEnrolling={enrollingSection === course.id}
+                  onEnroll={handleEnrollClick}
+                />
+              ))}
+            </S.Grid>
+          </S.ScrollableGridContainer>
         ) : (
           <S.EmptyState>
             <p>Nenhuma disciplina encontrada.</p>

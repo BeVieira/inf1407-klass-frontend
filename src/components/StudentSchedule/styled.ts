@@ -22,6 +22,14 @@ export const Grid = styled.div`
   background-color: #e5e7eb;
   border: 1px solid #e5e7eb;
   min-width: 800px;
+
+  @media (max-width: 768px) {
+    min-width: auto;
+    grid-template-columns: 60px 1fr;
+    border: none;
+    background-color: transparent;
+    gap: 0;
+  }
 `;
 
 export const HeaderCell = styled.div`
@@ -31,6 +39,10 @@ export const HeaderCell = styled.div`
   font-weight: 600;
   color: #4b5563;
   font-size: 0.875rem;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 export const TimeCell = styled.div`
@@ -43,12 +55,15 @@ export const TimeCell = styled.div`
   align-items: center;
   justify-content: center;
   border-right: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
 `;
 
 export const SlotCell = styled.div<{ $isActive?: boolean }>`
   background-color: white;
   min-height: 3rem;
   position: relative;
+  border-bottom: 1px solid #f3f4f6;
+  border-right: 1px solid #f3f4f6;
   
   ${({ $isActive }) => $isActive && `
     background-color: #eff6ff;
@@ -83,4 +98,44 @@ export const CourseName = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+`;
+
+export const MobileControls = styled.div`
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    background-color: white;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+  }
+`;
+
+export const MobileDayTitle = styled.span`
+  font-weight: 600;
+  color: #111827;
+`;
+
+export const MobileNavButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #2563eb;
+  }
+
+  &:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+  }
 `;

@@ -1,5 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { parseSchedule, DAYS, HOURS } from "../../utils/scheduleUtils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import * as S from "./styled";
 
 interface Course {
@@ -15,6 +16,18 @@ interface StudentScheduleProps {
 }
 
 const StudentSchedule: React.FC<StudentScheduleProps> = ({ courses }) => {
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const slots = useMemo(() => {
     return courses.flatMap((course) =>
       parseSchedule(course.days, course.schedule, course.name, course.code)
@@ -27,10 +40,6 @@ const StudentSchedule: React.FC<StudentScheduleProps> = ({ courses }) => {
     );
 
     if (slot && hour === slot.start) {
-      // Only render the block at the start hour, spanning the duration
-      // Note: For simplicity in this grid implementation, we might just render it in every cell
-      // or use rowSpan if we were using a table.
-      // Here, we'll just render it in the cells it occupies.
       return (
         <S.CourseBlock
           style={{
@@ -44,28 +53,42 @@ const StudentSchedule: React.FC<StudentScheduleProps> = ({ courses }) => {
       );
     }
 
-    // If it's a middle hour of a block, don't render anything (the start block covers it)
-    // BUT since we are using CSS Grid with fixed cells, we can't easily span without complex logic.
-    // Alternative: Render in every cell but hide borders/overflow?
-    // Better approach for this simple grid: Render in every cell but visually merge?
-    // Let's stick to: Render in the start cell with absolute positioning and height > 100%
-
-    // Check if this hour is covered by a slot starting earlier
     const coveredBy = slots.find(
       (s) => s.day === day && hour > s.start && hour < s.end
     );
-    if (coveredBy) return null; // Already covered by the block started above
+    if (coveredBy) return null;
 
     return null;
   };
 
+  const handlePrevDay = () => {
+    setCurrentDayIndex((prev) => (prev > 0 ? prev - 1 : DAYS.length - 1));
+  };
+
+  const handleNextDay = () => {
+    setCurrentDayIndex((prev) => (prev < DAYS.length - 1 ? prev + 1 : 0));
+  };
+
+  const visibleDays = isMobile ? [DAYS[currentDayIndex]] : DAYS;
+
   return (
     <S.Container>
       <S.Title>Minha Grade Horária</S.Title>
+      
+      <S.MobileControls>
+        <S.MobileNavButton onClick={handlePrevDay}>
+          <ChevronLeft size={20} />
+        </S.MobileNavButton>
+        <S.MobileDayTitle>{DAYS[currentDayIndex]}</S.MobileDayTitle>
+        <S.MobileNavButton onClick={handleNextDay}>
+          <ChevronRight size={20} />
+        </S.MobileNavButton>
+      </S.MobileControls>
+
       <S.Grid>
         {/* Header Row */}
         <S.HeaderCell>Horário</S.HeaderCell>
-        {DAYS.map((day) => (
+        {visibleDays.map((day) => (
           <S.HeaderCell key={day}>{day}</S.HeaderCell>
         ))}
 
@@ -73,7 +96,7 @@ const StudentSchedule: React.FC<StudentScheduleProps> = ({ courses }) => {
         {HOURS.map((hour) => (
           <React.Fragment key={hour}>
             <S.TimeCell>{`${hour}h`}</S.TimeCell>
-            {DAYS.map((day) => (
+            {visibleDays.map((day) => (
               <S.SlotCell key={`${day}-${hour}`}>
                 {getSlotContent(day, hour)}
               </S.SlotCell>
