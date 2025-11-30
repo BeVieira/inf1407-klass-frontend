@@ -6,10 +6,10 @@ import React, {
   useCallback,
 } from "react";
 import {
-  fetchUserProfile,
-  loginRequest,
+  fetchCurrentUser,
+  loginUser,
   refreshAccessToken,
-} from "../utils/api";
+} from "../services/userService";
 
 export type UserRole = "student" | "professor" | "admin";
 
@@ -38,16 +38,6 @@ const STORAGE_KEYS = {
   refresh: "klass_refresh_token",
 };
 
-const decodeJwt = (token: string): Record<string, unknown> | null => {
-  try {
-    const payload = token.split(".")[1];
-    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(decoded);
-  } catch {
-    return null;
-  }
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -74,35 +64,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem(STORAGE_KEYS.refresh, tokens.refresh);
   };
 
-  const fetchProfileFromToken = useCallback(
-    async (token: string): Promise<User | null> => {
-      const decoded = decodeJwt(token);
-      const userId = decoded?.user_id as number | undefined;
-      if (!userId) return null;
-
-      const profile = await fetchUserProfile(userId, token);
-      const normalizedRole =
-        profile.role === "teacher" ? "professor" : profile.role;
-      return {
-        id: profile.id,
-        username: profile.username,
-        email: profile.email,
-        registration: profile.registration,
-        role: normalizedRole as UserRole,
-      };
-    },
-    []
-  );
-
   const login = useCallback(
     async (username: string, password: string) => {
-      const tokens = await loginRequest(username, password);
-      const profile = await fetchProfileFromToken(tokens.access);
+      const tokens = await loginUser({ login: username, password });
+      
+      // Pass the new access token to fetch the user profile
+      const profile = await fetchCurrentUser(tokens.access); 
+      
       if (!profile)
         throw new Error("Não foi possível recuperar o perfil do usuário.");
-      persistSession(profile, tokens);
+      
+      // Ensure registration is a string (API might return number)
+      const normalizedProfile: User = {
+        ...profile,
+        registration: String(profile.registration),
+        role: profile.role as UserRole, // Ensure role matches
+      };
+
+      persistSession(normalizedProfile, tokens);
     },
-    [fetchProfileFromToken]
+    []
   );
 
   const logout = useCallback(() => {
@@ -142,6 +123,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     </AuthContext.Provider>
   );
 };
+
+
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {

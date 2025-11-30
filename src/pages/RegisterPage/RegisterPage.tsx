@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
-import { registerUser } from "../../utils/api";
+import { registerUser } from "../../services/userService";
 import { useToast } from "../../contexts/ToastContext";
 import * as S from "./styled";
 
