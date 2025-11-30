@@ -104,13 +104,13 @@ export interface CourseResponse {
 
 export interface SectionResponse {
   id: number;
-  course: CourseResponse | number;
-  schedule?: string;
-  days?: string;
-  vacancies?: number;
-  capacity?: number;
+  course: number;
+  days: string; //Ex.: SEG-QUA
+  schedule: string; //Ex.: 10:00-12:00
+  vacancies: number;
+  capacity: number;
   enrolled_count?: number;
-  owner?: number;
+  occupied_vacancies: number;
 }
 
 export interface EnrollmentResponse {
@@ -133,7 +133,7 @@ export const resolveCourseData = (section: SectionResponse, courseLookup: Record
 export const formatSchedule = (section: SectionResponse) => section.schedule || section.days || 'Horário a definir';
 
 export const computeVacancies = (section: SectionResponse) => {
-  const total = section.vacancies ?? section.capacity ?? 0;
-  const enrolled = section.enrolled_count ?? 0;
+  const total = section.vacancies ?? section.capacity;
+  const enrolled = section.occupied_vacancies;
   return { totalSpots: total, occupied: enrolled };
 };
