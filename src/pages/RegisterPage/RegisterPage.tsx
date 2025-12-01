@@ -50,7 +50,7 @@ const RegisterPage: React.FC = () => {
 
           <S.Form onSubmit={handleSubmit}>
             <S.Label htmlFor="username">
-              Nome
+              Usuário
               <S.Input
                 id="username"
                 name="username"

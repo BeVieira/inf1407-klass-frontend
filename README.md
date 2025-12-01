@@ -1,73 +1,96 @@
-# React + TypeScript + Vite
+# Klass - Sistema de Gestão Acadêmica
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Integrantes do Grupo
 
-Currently, two official plugins are available:
+- **João Victor da Silva Francisco**
+- **Bernardo Vieira Santos**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Escopo do Projeto
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+O **Klass** é um sistema web de gestão acadêmica desenvolvido para facilitar a interação entre alunos, professores e a administração de uma instituição de ensino. O objetivo principal é permitir que professores gerenciem suas disciplinas e turmas, e que alunos possam consultar ofertas, montar suas grades horárias e realizar inscrições.
 
-## Expanding the ESLint configuration
+### Principais Funcionalidades
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Autenticação e Autorização**: Login seguro com diferentes níveis de acesso (Aluno, Professor, Admin).
+- **Gerenciamento de Usuários**: Cadastro e edição de senhas.
+- **Recuperação de Senha**: Fluxo de "Esqueci minha senha" implementado.
+- **Gestão de Disciplinas**: Professores podem criar e gerenciar disciplinas e turmas.
+- **Matrícula**: Alunos podem visualizar turmas disponíveis e realizar inscrições.
+- **Grade Horária**: Visualização gráfica do horário semanal do aluno.
+- **Dashboards Personalizados**: Interfaces específicas para cada perfil de usuário.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Manual do Usuário
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Instalação e Execução
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Para rodar o projeto localmente, certifique-se de ter o [Node.js](https://nodejs.org/) instalado.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1.  Instale as dependências:
+    ```bash
+    npm install
+    ```
+2.  Inicie o servidor de desenvolvimento:
+    ```bash
+    npm run dev
+    ```
+3.  Acesse `http://localhost:5173` no seu navegador.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Navegação e Uso
+
+#### 1. Autenticação
+
+- **Login**: Acesse a página de login e entre com suas credenciais.
+  - _Nota_: Como o backend é simulado, você pode criar uma conta nova na tela de **Registro** ou usar as credenciais de teste se houver.
+- **Registro**: Crie uma conta de Aluno ou Professor.
+- **Recuperação de Senha**: Fluxo de "Esqueci minha senha" implementado.
+
+#### 2. Perfil de Aluno
+
+- **Dashboard**: Ao logar como aluno, você verá sua grade horária e atalhos.
+- **Buscar Disciplinas**: Utilize a barra de pesquisa para encontrar matérias.
+- **Inscrição**: Clique em uma disciplina para ver detalhes e se inscrever em uma turma.
+
+#### 3. Perfil de Professor
+
+- **Dashboard**: Visualize suas turmas ativas.
+- **Criar Disciplina/Turma**: Utilize os botões de ação para cadastrar novas ofertas no sistema.
+- **Lista de Alunos**: Veja quem está inscrito em suas turmas.
+
+#### 4. Perfil de Admin
+
+- Acesso a uma visão geral do sistema (funcionalidade simplificada para demonstração).
+
+---
+
+## Relatório de Desenvolvimento
+
+### O que foi desenvolvido e FUNCIONA ✅
+
+1.  **Frontend Moderno**: Interface construída com React, TypeScript e Styled Components.
+2.  **Roteamento**: Configuração completa de rotas com `react-router-dom`, incluindo proteção de rotas privadas e redirecionamento baseado em role.
+3.  **Autenticação Completa**:
+    - Login e Registro com validação de formulários.
+    - Persistência de sessão (simulada com `localStorage`).
+    - Logout.
+4.  **Fluxo de Senha**:
+    - Solicitação de reset de senha.
+    - Página de redefinição de senha (com validação de token simulada).
+5.  **Dashboards**:
+    - **Aluno**: Visualização de grade horária (componente complexo de calendário), busca de disciplinas.
+    - **Professor**: Listagem de turmas, modais para criação de cursos e seções.
+---
+
+## Tecnologias Utilizadas
+
+- React 18
+- TypeScript
+- Vite
+- Styled Components
+- React Router DOM
+- Lucide React (Ícones)
+- HTML5
+- CSS3

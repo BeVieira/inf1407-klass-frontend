@@ -53,7 +53,7 @@ const LoginPage: React.FC = () => {
 
           <S.Form onSubmit={handleSubmit}>
             <S.Label htmlFor="username">
-              Usuário ou matrícula
+              Usuário
               <S.Input
                 id="username"
                 name="username"
